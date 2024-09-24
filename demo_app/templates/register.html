@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+</head>
+<body>
+<h1>Register</h1>
+<form method="POST" action="/register">
+    <!-- Username Field -->
+    <label for="username">Username</label>
+    <input type="text" name="username" placeholder="Choose a username"
+           value="{{ form.fields['username'].value or '' }}">
+    {% if errors.username %}
+    <ul>
+        {% for error in errors.username %}
+        <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- Password Field -->
+    <label for="password">Password</label>
+    <input type="password" name="password" placeholder="Create a password"
+           value="{{ form.fields['password'].value or '' }}">
+    {% if errors.password %}
+    <ul>
+        {% for error in errors.password %}
+        <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- Confirm Password Field -->
+    <label for="confirm_password">Confirm Password</label>
+    <input type="password" name="confirm_password" placeholder="Confirm your password"
+           value="{{ form.fields['confirm_password'].value or '' }}">
+    {% if errors.confirm_password %}
+    <ul>
+        {% for error in errors.confirm_password %}
+        <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <button type="submit">Register</button>
+</form>
+</body>
+</html>

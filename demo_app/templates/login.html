@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+</head>
+<body>
+    <form method="POST" action="/login">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <!-- General Login Error (e.g., Invalid username or password) -->
+        {% if errors.login %}
+        <ul>
+            {% for error in errors.login %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <!-- Username Field -->
+        <label for="username">Username</label>
+        <input type="text" name="username" placeholder="Enter your username" value="{{ form.fields['username'].value or '' }}">
+        {% if errors.username %}
+        <ul>
+            {% for error in errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <!-- Password Field -->
+        <label for="password">Password</label>
+        <input type="password" name="password" placeholder="Enter your password" value="{{ form.fields['password'].value or '' }}">
+        {% if errors.password %}
+        <ul>
+            {% for error in errors.password %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        <button type="submit">Login</button>
+    </form>
+</body>
+</html>

@@ -1,0 +1,8 @@
+.idea
+venv
+yasgi.iml
+**/__pycache__/
+htmlcov
+.coverage
+tempo*
+default.db

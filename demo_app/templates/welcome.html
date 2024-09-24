@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome YASGI an EDM ASGI Nano-Framework</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            text-align: center;
+            padding: 50px;
+        }
+        h1 {
+            color: #007bff;
+        }
+        .content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            display: inline-block;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: left; /* To make sure the content inside is left-aligned */
+        }
+        a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        .cta {
+            margin-top: 20px;
+        }
+        pre {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: left; /* Ensure the text in code blocks is left-aligned */
+            white-space: pre-wrap; /* Allows wrapping in the code block */
+        }
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+        }
+        .note {
+            margin-top: 20px;
+            font-style: italic;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+<div class="content">
+    <h1>Welcome to the EDM ASGI Framework!</h1>
+    <p>A lightweight, async-first framework built with modern web development in mind.</p>
+
+    <div class="cta">
+        <h3>Get Started</h3>
+        <a href="/docs">Documentation</a> | <a href="https://github.com/your-repo">GitHub</a>
+    </div>
+
+    <div class="examples">
+        <h3>Example Routes:</h3>
+        <p>Define routes easily with Python:</p>
+        <pre><code>from demo_app.controllers.welcome_controller import welcome_controller
+
+def register_routes(routing_service):
+    routing_service.add_route('/', 'GET', welcome_controller)
+        </code></pre>
+
+        <h3>Example Controllers:</h3>
+        <p>Controllers are simple functions that return a response:</p>
+        <pre><code>from src.controllers.base_controller import BaseController
+from src.event_bus import Event
+from demo_app.di_setup import di_container
+
+async def welcome_controller(event: Event):
+    controller = BaseController(event)
+    template_service = await di_container.get('TemplateService')
+    rendered_content = template_service.render_template('welcome.html', {})
+    await controller.send_html(rendered_content)
+        </code></pre>
+
+        <h3>Example Templates:</h3>
+        <p>Templates are rendered using Jinja2/Mako2:</p>
+        <pre><code>The template is this one :P</code></pre>
+    </div>
+
+    <div class="note">
+        Note: Everything a developer needs to know is in the <code>demo_app</code> folder, which serves as the
+        example to follow. The <code>src</code> folder contains the internals of the framework.
+    </div>
+</div>
+</body>
+</html>
