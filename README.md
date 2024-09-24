@@ -1,6 +1,6 @@
 # YASGI
 
-A lightweight, async-first web framework built with modern web development in mind.
+A lightweight, async-first web framework built with modern web development in mind. **This is work in progress** focused first on educational purposes.
 
 ## Tools of the trade
 - Python 3.11.8
