@@ -128,3 +128,4 @@ class RoutingService:
 
     async def start_routing(self):
         self.event_bus.subscribe("http.request.received", self.route_event)
+        self.event_bus.subscribe("websocket.connection.received", self.route_event)

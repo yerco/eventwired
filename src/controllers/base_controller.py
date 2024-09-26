@@ -1,3 +1,4 @@
+import asyncio
 from typing import Union
 
 from src.event_bus import Event
@@ -10,6 +11,7 @@ class BaseController:
     def __init__(self, event: Event):
         self.event = event
         self.send = event.data['send']
+        self.receive = event.data.get('receive')  # Get the ASGI receive callable from the event data
 
     # Create a Response object without sending it, for further modification (e.g., setting cookies)
     def create_response(self, content: Union[str, dict, bytes], status: int = 200, content_type: str = 'text/plain'):
@@ -46,6 +48,42 @@ class BaseController:
         response = self.create_response(message, status, content_type='text/plain')
         await self.send_response(response)
 
-    # Placeholder for future protocols like WebSockets
-    async def handle_websocket(self):
-        pass
+    # WebSocket Methods
+    async def accept_websocket(self):
+        await self.send({
+            'type': 'websocket.accept'
+        })
+
+    async def receive_websocket_message(self):
+        event = await self.receive()
+
+        if event['type'] == 'websocket.connect':
+            print("WebSocket connected.")
+            return event['type']
+        elif event['type'] == 'websocket.receive':
+            return event.get('text') or event.get('bytes')
+        elif event['type'] == 'websocket.disconnect':
+            return "disconnect"
+        else:
+            return None
+
+    async def receive_websocket_message_with_timeout(controller, timeout=3):
+        try:
+            return await asyncio.wait_for(controller.receive_websocket_message(), timeout=timeout)
+        except asyncio.TimeoutError:
+            print("WebSocket message receive timed out.")
+            return None
+
+    async def send_websocket_message(self, message: str):
+        # Ensure the message is properly formatted as a text WebSocket message
+        await self.send({
+            'type': 'websocket.send',
+            'text': message
+        })
+
+    async def close_websocket(self, code: int = 1000):
+        # Ensure proper closing of the WebSocket with the correct code
+        await self.send({
+            'type': 'websocket.close',
+            'code': code
+        })

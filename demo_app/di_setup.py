@@ -2,7 +2,6 @@ from src.dicontainer import di_container
 from src.event_bus import EventBus
 
 from src.models.base import Base
-from src.services.https_redirect_middleware import HTTPSRedirectMiddleware
 from src.services.orm.orm_service import ORMService
 from src.services.form_service import FormService
 from src.services.routing_service import RoutingService
@@ -12,8 +11,8 @@ from src.services.password_service import PasswordService
 from src.services.middleware_service import MiddlewareService
 from src.services.session_service import SessionService
 from src.services.publisher_service import PublisherService
+from src.services.websocket_service import WebSocketService
 
-from src.middleware.logging_middleware import LoggingMiddleware
 from src.middleware.timing_middleware import TimingMiddleware
 from src.middleware.csrf_middleware import CSRFMiddleware
 from src.middleware.session_middleware import SessionMiddleware
@@ -48,6 +47,9 @@ di_container.register_singleton(routing_service, 'RoutingService')
 
 publisher_service = PublisherService(event_bus=event_bus)
 di_container.register_singleton(publisher_service, 'PublisherService')
+
+websocket_service = WebSocketService()  # (event_bus=event_bus)
+di_container.register_singleton(websocket_service, 'WebSocketService')
 
 middleware_service = MiddlewareService()
 middleware_service.register_middleware(SessionMiddleware(session_service), priority=10)

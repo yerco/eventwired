@@ -26,11 +26,17 @@ A lightweight, async-first web framework built with modern web development in mi
    ```
 
 4. Run the server
-   2.1 Using uvicorn
+
+   Currently, the server only supports **Uvicorn**.
+
+   **Using Uvicorn:**
    ```bash
-   $ uvicorn demo_app.app:app [--reload]
+   $ python run_server.py [--reload] [--host 127.0.0.1] [--port 8000]
    ```
-And go to http://127.0.0.1:8000
+   
+   Visit the server at http://127.0.0.1:8000
+
+   Note: Daphne support is not yet implemented.
 
 ## Testing
    ```bash
@@ -38,7 +44,7 @@ And go to http://127.0.0.1:8000
    
    $ pytest --cov=src tests/
    
-   $ pytest --cov=src --cov-report=html
+   $ pytest --cov=demo_app --cov-report=html
    ```
 
 ## User-Centric Framework Design

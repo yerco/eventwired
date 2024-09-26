@@ -159,16 +159,3 @@ async def test_send_error():
 
     # Check that the response has been correctly created
     assert isinstance(response, Response)
-
-
-@pytest.mark.asyncio
-async def test_handle_websocket():
-    mock_send = AsyncMock()
-    event = Event(name='test_event', data={'send': mock_send})
-    controller = BaseController(event)
-
-    # Currently, handle_websocket does nothing, so it should just pass
-    await controller.handle_websocket()
-
-    # No assertions to make since handle_websocket is a placeholder
-    # but we ensure it doesn't raise any errors

@@ -32,6 +32,9 @@ async def test_login_controller_get_integration():
 
 @pytest.mark.asyncio
 async def test_login_controller_post_success_full():
+    if os.path.exists('default.db'):
+        os.remove('default.db')
+
     # Step 1: Initialize the DI container and ORMService
     orm_service = await di_container.get('ORMService')
     await orm_service.init()  # Ensure ORM is initialized and connected to the database

@@ -10,7 +10,7 @@ class Response:
         self.status_code = status_code
         self.headers = headers or []
         self.content_type = content_type
-        self.body = b''
+        self.body = b''  # Will be set after encoding content
 
     def _encode_content(self):
         if isinstance(self.content, dict):
@@ -27,16 +27,20 @@ class Response:
         self._set_content_type_header()
 
     def _set_content_type_header(self):
-        # Make sure the headers are stored as tuples
-        self.headers = [(key, value) for key, value in self.headers if key != b'content-type']
+        # Convert all headers to byte tuples
+        self.headers = [(key.encode() if isinstance(key, str) else key,
+                         value.encode() if isinstance(value, str) else value)
+                        for key, value in self.headers if key != b'content-type']
+        # Add the correct content-type header
         self.headers.append((b'content-type', self.content_type.encode()))
 
     async def send(self, send):
-        self._encode_content()
+        self._encode_content()  # Ensure the body is encoded before sending
+        print("Sending headers:", self.headers)  # Debug print
         await send({
             'type': 'http.response.start',
             'status': self.status_code,
-            'headers': self.headers  # Headers should now be tuples
+            'headers': self.headers  # Ensure headers are properly formatted
         })
         await send({
             'type': 'http.response.body',
@@ -49,10 +53,10 @@ class Response:
         if http_only:
             cookie_value += "; HttpOnly"
         if secure:
-            cookie_value += "; Secure"  # Ensure cookie is only sent over HTTPS
+            cookie_value += "; Secure"
         if expires is not None:
-            cookie_value += f"; Expires={expires}"  # Properly handle the expiration
-        self.headers.append((b'set-cookie', cookie_value.encode()))  # Store as tuple
+            cookie_value += f"; Expires={expires}"
+        self.headers.append((b'set-cookie', cookie_value.encode()))
 
     @classmethod
     async def json(cls, send, data: dict, status_code: int = 200):

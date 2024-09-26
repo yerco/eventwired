@@ -47,7 +47,7 @@ class SessionMiddleware(BaseMiddleware):
                 event.data['response_headers'] = []
 
             session_id = session.session_id
-            print(f"Setting session cookie with ID: {session_id}")
+            # print(f"Setting session cookie with ID: {session_id}")
             event.data['response_headers'].append((
                 'Set-Cookie', f'session_id={session.session_id}; Path=/; HttpOnly; Secure; SameSite=Strict'))
             # print(f"Set-Cookie header added with session_id: {session.session_id}")

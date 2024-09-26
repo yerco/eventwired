@@ -5,6 +5,7 @@ from src.event_bus import Event, EventBus
 from src.core.request import Request
 
 
+# HTTP
 @pytest.mark.asyncio
 async def test_add_and_remove_route():
     event_bus = EventBus()
@@ -246,3 +247,133 @@ async def test_handle_404_for_unmatched_param_route(monkeypatch):
         'type': 'http.response.body',
         'body': b'Not Found',
     })
+
+# Websockets
+@pytest.mark.asyncio
+async def test_websocket_route_add_and_remove():
+    event_bus = EventBus()
+    routing_service = RoutingService(event_bus=event_bus)
+
+    handler = AsyncMock()
+
+    # Add a WebSocket route
+    routing_service.add_route('/ws', 'WEBSOCKET', handler)
+
+    # Create the expected regex pattern for the WebSocket path '/ws'
+    regex_path = r'^/ws$'
+
+    # Check that the WebSocket route is correctly added as a regex pattern
+    assert regex_path in routing_service.routes
+    assert 'WEBSOCKET' in routing_service.routes[regex_path]
+
+    # Remove the WebSocket route
+    routing_service.remove_route('/ws', 'WEBSOCKET')
+
+    # Check that the WebSocket route is correctly removed
+    assert regex_path not in routing_service.routes
+
+
+@pytest.mark.asyncio
+async def test_route_to_correct_websocket_handler(monkeypatch):
+    event_bus = EventBus()
+    routing_service = RoutingService(event_bus=event_bus)
+
+    handler = AsyncMock()
+
+    # Add a WebSocket route
+    routing_service.add_route('/ws', 'WEBSOCKET', handler)
+
+    # Create a mock request object
+    scope = {'path': '/ws', 'type': 'websocket'}
+    receive = AsyncMock()
+    send = AsyncMock()
+    request = Request(scope, receive)
+
+    # Create a mock WebSocket event and pass the request object
+    event = Event(name='websocket.connection.received', data={
+        'request': request,
+        'send': send,
+        'receive': receive
+    })
+
+    # Route the event
+    await routing_service.route_event(event)
+
+    # Ensure the correct handler was called
+    handler.assert_called_once_with(event)
+
+
+@pytest.mark.asyncio
+async def test_handle_websocket_disconnect(monkeypatch):
+    event_bus = EventBus()
+    routing_service = RoutingService(event_bus=event_bus)
+
+    handler = AsyncMock()
+
+    # Add a WebSocket route
+    routing_service.add_route('/ws', 'WEBSOCKET', handler)
+
+    # Create a mock request object for WebSocket
+    scope = {'path': '/ws', 'type': 'websocket'}
+    receive = AsyncMock()
+    send = AsyncMock()
+    receive.side_effect = [
+        {'type': 'websocket.receive', 'text': 'Hello Server!'},
+        {'type': 'websocket.disconnect'}
+    ]
+    request = Request(scope, receive)
+
+    # Create a mock WebSocket event
+    event = Event(name='websocket.connection.received', data={
+        'request': request,
+        'send': send,
+        'receive': receive
+    })
+
+    # Route the event
+    await routing_service.route_event(event)
+
+    # Ensure that the WebSocket handler was called
+    handler.assert_called_once_with(event)
+
+    # Check if disconnect was handled properly
+    await receive()
+    handler.assert_called()
+
+
+@pytest.mark.asyncio
+async def test_handle_websocket_binary_message(monkeypatch):
+    event_bus = EventBus()
+    routing_service = RoutingService(event_bus=event_bus)
+
+    handler = AsyncMock()
+
+    # Add a WebSocket route
+    routing_service.add_route('/ws', 'WEBSOCKET', handler)
+
+    # Create a mock request object for WebSocket
+    scope = {'path': '/ws', 'type': 'websocket'}
+    receive = AsyncMock()
+    send = AsyncMock()
+    receive.side_effect = [
+        {'type': 'websocket.receive', 'bytes': b'\x00\x01\x02'},
+        {'type': 'websocket.disconnect'}
+    ]
+    request = Request(scope, receive)
+
+    # Create a mock WebSocket event
+    event = Event(name='websocket.connection.received', data={
+        'request': request,
+        'send': send,
+        'receive': receive
+    })
+
+    # Route the event
+    await routing_service.route_event(event)
+
+    # Ensure that the WebSocket handler was called
+    handler.assert_called_once_with(event)
+
+    # Check if binary message was handled properly
+    await receive()
+    handler.assert_called()

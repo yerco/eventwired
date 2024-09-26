@@ -14,6 +14,9 @@ class Request:
 
     @property
     def method(self):
+        connection_type = self.scope.get('type', 'http')  # Default to 'http' if 'type' is not provided
+        if connection_type == 'websocket':
+            return 'WEBSOCKET'
         return self.scope.get('method', 'GET').upper()
 
     @property

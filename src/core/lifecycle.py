@@ -25,17 +25,30 @@ async def shutdown(di_container):
     try:
         orm_service = await di_container.get('ORMService')
         await orm_service.cleanup()
+
+        websocket_service = await di_container.get('WebSocketService')
+        await websocket_service.broadcast_shutdown()
     except Exception as e:
-        print(f"Error during ORM cleanup: {e}")
+        print(f"Error during ORM/WebSocket cleanup: {e}")
 
 
 async def handle_lifespan_events(scope, receive, send, request, di_container, user_startup_callback=None):
-    while True:
-        message = await receive()
-        if message['type'] == 'lifespan.startup':
-            await startup(di_container, user_startup_callback)  # Pass user callback here
-            await send({'type': 'lifespan.startup.complete'})
-        elif message['type'] == 'lifespan.shutdown':
-            await shutdown(di_container)
-            await send({'type': 'lifespan.shutdown.complete'})
-            return
+    try:
+        while True:
+            message = await receive()
+            if message['type'] == 'lifespan.startup':
+                await startup(di_container, user_startup_callback)  # Pass user callback here
+                await send({'type': 'lifespan.startup.complete'})
+            elif message['type'] == 'lifespan.shutdown':
+                await shutdown(di_container)
+                await send({'type': 'lifespan.shutdown.complete'})
+                return
+            else:
+                # Lifespan protocol unsupported or unrecognized message
+                print(f"Unsupported lifespan message: {message}")
+                await send({'type': 'lifespan.shutdown.complete'})
+    except Exception as e:
+        print(f"Error during lifespan handling: {e}")
+        await send({
+            'type': 'lifespan.shutdown.complete',
+        })
