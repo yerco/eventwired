@@ -36,7 +36,6 @@ class Response:
 
     async def send(self, send):
         self._encode_content()  # Ensure the body is encoded before sending
-        print("Sending headers:", self.headers)  # Debug print
         await send({
             'type': 'http.response.start',
             'status': self.status_code,
