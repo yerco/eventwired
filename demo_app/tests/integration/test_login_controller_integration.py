@@ -31,45 +31,48 @@ async def test_login_controller_get_integration():
 
 
 @pytest.mark.asyncio
-async def test_login_controller_post_success_full():
-    if os.path.exists('default.db'):
-        os.remove('default.db')
+async def test_login_controller_post_success_full(monkeypatch):
+    # Mock the config_service.get method to return a test-specific database path
+    def mock_get(key, default=None):
+        if key == 'DATABASE_URL':
+            return f'sqlite+aiosqlite:///test_db.db'
+        return default
 
-    # Step 1: Initialize the DI container and ORMService
+    # Monkeypatch the config_service.get method
     orm_service = await di_container.get('ORMService')
-    await orm_service.init()  # Ensure ORM is initialized and connected to the database
+    monkeypatch.setattr(orm_service.config_service, 'get', mock_get)
 
-    # Optionally, make sure tables are created (if necessary for the test)
+    # Initialize the ORM service with a specific database path
+    await orm_service.init(db_path="custom_test.db")
+
     await orm_service.create_tables()
 
-    # Step 2: Hash the password before storing it
     password_service = await di_container.get('PasswordService')
     hashed_password = password_service.hash_password('validpassword')
 
     # Ensure the user exists in the database with a hashed password
     await orm_service.create(User, username='validuser', password=hashed_password)
 
-    # Step 3: Create a mock form data representing the body of a POST request
     async def mock_receive():
         return {
             'body': b'username=validuser&password=validpassword',
             'more_body': False
         }
 
-    # Step 4: Create a Request object simulating a real POST request
+    # Create a Request object simulating a real POST request
     request = Request(scope={'method': 'POST'}, receive=mock_receive)
 
-    # Step 5: Prepare the event with real DI container and other dependencies
+    # Prepare the event with real DI container and other dependencies
     event = Event(name='http.request.received', data={
         'request': request,
         'send': AsyncMock(),  # Mock the send function for the ASGI response
         'session': None
     })
 
-    # Step 6: Call the login_controller with the real container
+    # Call the login_controller with the real container
     await login_controller(event)
 
-    # Step 7: Extract and assert the response from the event
+    # Extract and assert the response from the event
     response = event.data.get('response')
 
     # Ensure the response is successful
@@ -78,7 +81,7 @@ async def test_login_controller_post_success_full():
     assert "Login successful" in response.content
     assert response.content_type == 'text/plain'
 
-    os.remove('default.db')
+    os.remove('test_db.db')
 
 
 @pytest.mark.asyncio

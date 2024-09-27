@@ -6,3 +6,4 @@ htmlcov
 .coverage
 tempo*
 default.db
+demo_app.db

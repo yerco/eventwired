@@ -13,7 +13,7 @@ class ConfigService:
         self._config.update({
             'SECRET_KEY': os.getenv('SECRET_KEY', 'default_secret'),
             'PRUNE_INTERVAL': timedelta(minutes=5),
-            'DATABASE_URL': os.getenv('DATABASE_URL', 'sqlite+aiosqlite:///default.db'),
+            'DATABASE_URL': os.getenv('DATABASE_URL', 'sqlite+aiosqlite:///demo_app.db'),
             'TEMPLATE_DIR': 'src/templates',
             'ORM_ENGINE': 'SQLAlchemy',
             'DB_SESSION': None,

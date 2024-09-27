@@ -18,6 +18,8 @@ class SQLAlchemyAdapter(ORMAdapter):
 
     async def create_tables(self):
         try:
+            # Print the database URL being used
+            print(f"Creating tables in database: {self.engine.url}")
             async with self.engine.begin() as conn:
                 await conn.run_sync(self.Base.metadata.create_all)
         except SQLAlchemyError as e:
