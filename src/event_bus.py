@@ -11,7 +11,6 @@ class Event:
         self.name = name
         self.data = data or {}
         self.timestamp = datetime.utcnow()
-        self.handled = False
 
     def __hash__(self):
         # Convert the event's data to a JSON string and hash it with its name
@@ -20,12 +19,14 @@ class Event:
         return int(hashlib.sha256(event_id_str.encode('utf-8')).hexdigest(), 16)
 
 
+Listener = Union[Callable[[Event], None], Callable[[Event], Awaitable[None]], Coroutine[Any, Any, None]]
+
+
 class EventBus:
     def __init__(self):
-        self.listeners: Dict[str, List[Union[Callable[[Event], None], Callable[[Event], Awaitable[None]]]]] = {}
+        self.listeners: Dict[str, List[Listener]] = {}
 
-    def subscribe(self, event_name: str, listener: Union[
-        Callable[[Event], None], Callable[[Event], Awaitable[None]], Coroutine[Any, Any, None]]):
+    def subscribe(self, event_name: str, listener: Listener):
         if event_name not in self.listeners:
             self.listeners[event_name] = []
         self.listeners[event_name].append(listener)
@@ -41,5 +42,8 @@ class EventBus:
                     else:
                         listener(event)  # Synchronous function call
                 except Exception as e:
-                    # Log the exception or handle it appropriately
-                    print(f"Error in listener for event '{event.name}': {e}")
+                    if "websocket.close" in str(e):
+                        # Gracefully handle WebSocket closure errors
+                        print(f"WebSocket already closed for event '{event.name}': {e}")
+                    else:
+                        print(f"Error in listener for event '{event.name}': {e}")

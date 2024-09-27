@@ -1,18 +1,69 @@
+import asyncio
 from typing import Awaitable, Callable
 
 
 class WebSocketService:
-    def __init__(self, message_processor: Callable[[str], Awaitable[str]] = None):
+    def __init__(self):
         # Store connected clients (could be expanded to handle multiple clients)
         self.clients = []
-        self.message_processor = message_processor or self.default_process_message
+        self.controller = None
+        self.connection_accepted = False  # Track connection state
 
-    async def default_process_message(self, message: str) -> str:
-        return f"Echo: {message}"
+    def set_controller(self, controller):
+        self.controller = controller
 
-    async def process_message(self, message: str) -> str:
-        # Now the message processor can be an async function
-        return await self.message_processor(message)
+    async def start(self):
+        # Ensure the controller has been set
+        if not self.controller:
+            raise ValueError("Controller must be set before starting the WebSocketService.")
+        if not self.connection_accepted:
+            await self.controller.accept_websocket()
+            self.connection_accepted = True  # Mark the connection as accepted
+
+    async def stop(self):
+        if self.connection_accepted:
+            await self._graceful_shutdown()
+            self.connection_accepted = False  # Reset state on close
+
+    async def listen(self, on_message):
+        try:
+            while True:
+                should_break = await self._listen(on_message)
+                if should_break:
+                    break
+        except asyncio.CancelledError:
+            pass
+        except RuntimeError as e:
+            if "websocket.close" not in str(e):
+                print(f"WebSocket RuntimeError during shutdown: {e}")
+        except Exception as e:
+            print(f"WebSocket error: {e}")
+        finally:
+            print("Finally block reached")
+            await self.stop()
+
+    async def _listen(self, on_message):
+        message = await self.controller.receive_websocket_message()
+
+        if message is None or message.lower() in {"disconnect", "exit"}:
+            if message:
+                print(f"Received {message}, closing WebSocket connection.")
+            return True  # Signal to break the loop
+        elif message.lower() == "ping":
+            await self.controller.send_websocket_message("pong")
+        else:
+            await on_message(message)
+
+    async def _graceful_shutdown(self):
+        try:
+            await self.controller.send_websocket_message("Server is shutting down. Please reconnect later.")
+            await self.controller.close_websocket()
+            self.connection_accepted = False  # Reset state after a successful close
+        except asyncio.CancelledError:
+            pass
+        except Exception as close_error:
+            if "websocket.close" not in str(close_error):
+                print(f"Error during WebSocket closure: {close_error}")
 
     # Add a WebSocket client to the connected clients list
     def add_client(self, client_id: str):
@@ -28,8 +79,7 @@ class WebSocketService:
     async def broadcast_message(self, message: str):
         # Placeholder logic for broadcasting (assuming we have client connections)
         for client in self.clients:
-            # In a real scenario, you'd send the message to each client here
-            print(f"Broadcasting to {client}: {message}")
+            await self.send_message(client, message)
 
     async def broadcast_shutdown(self):
         for client in self.clients:
