@@ -12,6 +12,7 @@ class BaseController:
         self.event = event
         self.send = event.data['send']
         self.receive = event.data.get('receive')  # Get the ASGI receive callable from the event data
+        self.connection_accepted = False  # Track if the connection is accepted
 
     # Create a Response object without sending it, for further modification (e.g., setting cookies)
     def create_response(self, content: Union[str, dict, bytes], status: int = 200, content_type: str = 'text/plain'):
@@ -53,6 +54,7 @@ class BaseController:
         await self.send({
             'type': 'websocket.accept'
         })
+        self.connection_accepted = True
 
     async def receive_websocket_message(self):
         event = await self.receive()
