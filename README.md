@@ -64,19 +64,17 @@ contains the internal framework workings and is generally not necessary to modif
 
 ## Example Routes
 Define routes easily with Python:
-    
-    ```python
+   ```python
    from demo_app.controllers.welcome_controller import welcome_controller
    
    def register_routes(routing_service):
-   routing_service.add_route('/', 'GET', welcome_controller)
-    ```
+       routing_service.add_route('/', 'GET', welcome_controller)
+   ```
    
 ## Example Controllers
 Controllers are simple Python functions that handle requests and return responses. They can be as simple or complex
 as needed.
-
-    ```python
+   ```python
    from src.controllers.base_controller import BaseController
    from src.event_bus import Event
    from demo_app.di_setup import di_container
@@ -86,13 +84,13 @@ as needed.
       template_service = await di_container.get('TemplateService')
       rendered_content = template_service.render_template('welcome.html', {})
       await controller.send_html(rendered_content)
-    ```
+   ```
    
 ## Real-Time Chat Room Example
 With YASGI, you can create a real-time chat room with just a few lines of code. The demo_app includes a chat room
 available at `/chat_room`. Below is all you need to write to set up a chat room using WebSockets:
 
-    ```python
+   ```python
    from src.controllers.base_controller import BaseController
    from src.event_bus import Event
    from demo_app.di_setup import di_container
@@ -109,7 +107,17 @@ available at `/chat_room`. Below is all you need to write to set up a chat room 
       
       await websocket_service.accept_client_connection(controller)
       await websocket_service.listen(controller, on_message)
-    ```
+   ```
 
 This, along with a simple HTML template and route setup, is enough to get your chat room running.
 
+### Contribute
+
+Feedback is warmly welcomed, contributions, or suggestions to improve YASGI. Whether it's reporting a bug, suggesting a feature, or sharing your thoughts, your input is invaluable to me.
+
+If you'd like to contribute:
+- Fork the repository.
+- Create a new branch for your feature or bug fix.
+- Submit a pull request with a description of your changes.
+
+Please feel free to open an issue if you have questions or ideas. Every piece of feedback helps us make YASGI better!
