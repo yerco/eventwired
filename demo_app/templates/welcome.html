@@ -84,6 +84,28 @@ async def welcome_controller(event: Event):
         <h3>Example Templates:</h3>
         <p>Templates are rendered using Jinja2/Mako2:</p>
         <pre><code>The template is this one :P</code></pre>
+
+        <div class="examples">
+            <h3>Chat Room Feature:</h3>
+            <p>The app includes a real-time chat room available at <code>/chat_room</code>. You can easily create a chat room with just a few lines of code:</p>
+            <pre><code>from src.controllers.websocket_controller import WebSocketController
+from src.event_bus import Event
+
+async def chat_room_controller(event: Event):
+    websocket_service = await di_container.get('WebSocketService')
+    controller = WebSocketController(event)
+    websocket_service.register_client(controller)
+
+    async def on_message(message):
+        if message not in {"websocket.connect", "websocket.disconnect"}:
+            broadcast_message = f"User: {message}"
+            await websocket_service.broadcast_message(broadcast_message)
+
+    await websocket_service.accept_client_connection(controller)
+    await websocket_service.listen(controller, on_message)
+    </code></pre>
+            <p>This, along with a template and route setup, is all you need for a working chat room.</p>
+        </div>
     </div>
 
     <div class="note">
