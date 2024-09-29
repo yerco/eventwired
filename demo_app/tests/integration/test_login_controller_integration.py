@@ -32,6 +32,9 @@ async def test_login_controller_get_integration():
 
 @pytest.mark.asyncio
 async def test_login_controller_post_success_full(monkeypatch):
+    if os.path.exists('test_db.db'):
+        os.remove('test_db.db')
+
     # Mock the config_service.get method to return a test-specific database path
     def mock_get(key, default=None):
         if key == 'DATABASE_URL':

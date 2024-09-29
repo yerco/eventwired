@@ -16,5 +16,5 @@ def register_routes(routing_service):
     routing_service.add_route('/login', ['GET', 'POST'], login_controller)
     routing_service.add_route('/register', ['GET', 'POST'], register_controller)
     routing_service.add_route('/logout', 'GET', logout_controller)
-    routing_service.add_route('/websocket_test', 'GET', render_chat_room_controller)
+    routing_service.add_route('/chat_room', 'GET', render_chat_room_controller)
     routing_service.add_route('/myws', 'WEBSOCKET', chat_room_controller)

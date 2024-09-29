@@ -1,6 +1,4 @@
-from sqlalchemy.exc import IntegrityError
-
-from src.controllers.base_controller import BaseController
+from src.controllers.http_controller import HTTPController
 from src.event_bus import Event
 
 from demo_app.di_setup import di_container
@@ -14,7 +12,7 @@ async def home_controller(event: Event):
 
     users = await orm_service.all(User)
 
-    controller = BaseController(event)
+    controller = HTTPController(event)
 
     context = {'title': 'Welcome', 'text': 'Hello from the template!', 'users': users}
     rendered_content = template_service.render_template('home.html', context)

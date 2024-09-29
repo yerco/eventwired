@@ -1,5 +1,5 @@
 from src.event_bus import Event
-from src.controllers.base_controller import BaseController
+from src.controllers.http_controller import HTTPController
 
 from demo_app.di_setup import di_container
 
@@ -9,7 +9,7 @@ async def logout_controller(event: Event):
     session = event.data.get('session')
 
     # Initialize the controller for sending the response
-    controller = BaseController(event)
+    controller = HTTPController(event)
 
     publisher_service = await di_container.get('PublisherService')
 

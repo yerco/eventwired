@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock, Mock
+
 from src.services.websocket_service import WebSocketService
 
 
@@ -19,63 +20,17 @@ def test_add_and_remove_client():
 
 
 @pytest.mark.asyncio
-async def test_receive_message():
-    mock_receive = AsyncMock()
-    mock_receive.side_effect = [
-        {'type': 'websocket.receive', 'text': 'Hello WebSocket!'}
-    ]
-
-    websocket_service = WebSocketService()
-    message = await websocket_service.receive_message(mock_receive)
-
-    assert message == "Hello WebSocket!"
-
-
-@pytest.mark.asyncio
-async def test_send_message():
-    mock_send = AsyncMock()
-
-    websocket_service = WebSocketService()
-    await websocket_service.send_message(mock_send, "Test Message")
-
-    mock_send.assert_called_once_with({
-        'type': 'websocket.send',
-        'text': 'Test Message'
-    })
-
-
-@pytest.mark.asyncio
 async def test_start_websocket_service():
 
     websocket_service = WebSocketService()
     mock_controller = AsyncMock()
-    websocket_service.set_controller(mock_controller)
+    websocket_service.register_client(mock_controller)
     mock_controller.connection_accepted = False
 
-    await websocket_service.start(mock_controller)
+    await websocket_service.accept_client_connection(mock_controller)
 
     mock_controller.accept_websocket.assert_awaited_once(), "WebSocket connection was not accepted."
     assert mock_controller.connection_accepted is True, "Connection state was not updated correctly."
-
-
-@pytest.mark.asyncio
-async def test_broadcast_message():
-    websocket_service = WebSocketService()
-
-    # Create mock clients
-    mock_client_1 = AsyncMock()
-    mock_client_2 = AsyncMock()
-
-    # Add clients to WebSocketService
-    websocket_service.set_controller(mock_client_1)
-    websocket_service.set_controller(mock_client_2)
-
-    # Broadcast a message
-    await websocket_service.broadcast_message("Test Broadcast")
-
-    # Ensure each client received the broadcast message
-    mock_client_1.send_websocket_message.assert_awaited_once_with("Test Broadcast")
-    mock_client_2.send_websocket_message.assert_awaited_once_with("Test Broadcast")
 
 
 @pytest.mark.asyncio
@@ -84,7 +39,7 @@ async def test_stop_websocket_service():
     mock_controller = AsyncMock()
     mock_controller.connection_accepted = True
 
-    await websocket_service.stop(mock_controller)
+    await websocket_service.terminate_client_connection(mock_controller)
 
     mock_controller.close_websocket.assert_awaited_once(), "WebSocket connection was not properly closed."
     assert mock_controller.connection_accepted is False, "Connection state was not updated correctly."
@@ -115,45 +70,166 @@ async def test_listen_websocket_service(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_broadcast_shutdown(monkeypatch):
+async def test_underscore_listen_websocket_service(monkeypatch):
+    websocket_service = WebSocketService()
+    mock_controller = AsyncMock()
+    mock_controller.connection_accepted = True
+
+    # Simulate a message and a disconnect event
+    mock_controller.receive_websocket_message.side_effect = [
+        "Hello World!",
+        "disconnect"
+    ]
+
+    mock_on_message = AsyncMock()
+
+    # Call the underscore listen method to control the loop
+    await websocket_service._listen(mock_controller, mock_on_message)
+
+    # Check that the message was processed
+    mock_on_message.assert_called_once_with("Hello World!")
+    # Ensure the stop method was not called in this case
+    mock_controller.close_websocket.assert_not_called()
+    assert mock_controller.connection_accepted is True, "The connection was closed incorrectly."
+
+
+@pytest.mark.asyncio
+async def test_underscore_listen_websocket_service_ping():
+    websocket_service = WebSocketService()
+    mock_controller = AsyncMock()
+    mock_controller.connection_accepted = True
+
+    # Simulate a ping message
+    mock_controller.receive_websocket_message.side_effect = [
+        "ping"
+    ]
+
+    mock_on_message = AsyncMock()
+
+    # Call the underscore listen method to control the loop
+    await websocket_service._listen(mock_controller, mock_on_message)
+
+    # Ensure the ping message was responded to
+    mock_controller.send_websocket_message.assert_awaited_once_with("pong")
+    # Ensure the on_message method was not called
+    mock_on_message.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_underscore_listen_websocket_service_disconnect():
+    websocket_service = WebSocketService()
+    mock_controller = AsyncMock()
+    mock_controller.connection_accepted = True
+
+    # Simulate a disconnect event
+    mock_controller.receive_websocket_message.side_effect = [
+        "disconnect"
+    ]
+
+    mock_on_message = AsyncMock()
+
+    # Call the underscore listen method to control the loop
+    should_break = await websocket_service._listen(mock_controller, mock_on_message)
+
+    # Ensure the loop was broken
+    assert should_break is True, "The loop should have been broken after receiving a disconnect message."
+    # Ensure the on_message method was not called
+    mock_on_message.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_underscore_listen_websocket_service_no_message():
+    websocket_service = WebSocketService()
+    mock_controller = AsyncMock()
+    mock_controller.connection_accepted = True
+
+    # Simulate no message received
+    mock_controller.receive_websocket_message.side_effect = [
+        None
+    ]
+
+    mock_on_message = AsyncMock()
+
+    # Call the underscore listen method to control the loop
+    should_break = await websocket_service._listen(mock_controller, mock_on_message)
+
+    # Ensure the loop was broken
+    assert should_break is True, "The loop should have been broken after receiving no message."
+    # Ensure the on_message method was not called
+    mock_on_message.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_graceful_shutdown():
+    websocket_service = WebSocketService()
+    mock_controller = AsyncMock()
+
+    await websocket_service.graceful_shutdown(mock_controller)
+
+    mock_controller.send_websocket_message.assert_awaited_once_with(
+        "Server is shutting down. Please reconnect later."
+    )
+    mock_controller.close_websocket.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_broadcast_message():
     websocket_service = WebSocketService()
 
-    # Create mock clients with send_websocket_message and close_websocket methods
-    mock_client_1 = AsyncMock()
-    mock_client_1.connection_accepted = True
+    # Create mock clients to add to WebSocketService
+    mock_client_1 = Mock()
     mock_client_1.send_websocket_message = AsyncMock()
-    mock_client_1.close_websocket = AsyncMock()
+    mock_client_1.connection_accepted = True
 
-    mock_client_2 = AsyncMock()
-    mock_client_2.connection_accepted = True
+    mock_client_2 = Mock()
     mock_client_2.send_websocket_message = AsyncMock()
-    mock_client_2.close_websocket = AsyncMock()
+    mock_client_2.connection_accepted = True
 
-    # Add clients to WebSocketService
-    websocket_service.set_controller(mock_client_1)
-    websocket_service.set_controller(mock_client_2)
+    # Manually add the mocked client handlers to the WebSocketService
+    websocket_service.clients.append(mock_client_1)
+    websocket_service.clients.append(mock_client_2)
 
-    # Mock the print statements to capture the output for assertions
-    mock_print = Mock()
-    monkeypatch.setattr("builtins.print", mock_print)
+    # Broadcast message through client handlers
+    await websocket_service.broadcast_message("Test Broadcast")
 
-    # Broadcast shutdown message
+    # Verify each mock client received the broadcast message
+    mock_client_1.send_websocket_message.assert_awaited_once_with("Test Broadcast")
+    mock_client_2.send_websocket_message.assert_awaited_once_with("Test Broadcast")
+
+
+@pytest.mark.asyncio
+async def test_broadcast_shutdown():
+    websocket_service = WebSocketService()
+
+    # Create mock clients for WebSocketService
+    mock_client_1 = Mock()
+    mock_client_1.send_websocket_message = AsyncMock()
+    mock_client_1.connection_accepted = True  # This client has an open connection
+
+    mock_client_2 = Mock()
+    mock_client_2.send_websocket_message = AsyncMock()
+    mock_client_2.connection_accepted = True  # This client also has an open connection
+
+    mock_client_3 = Mock()
+    mock_client_3.send_websocket_message = AsyncMock()
+    mock_client_3.connection_accepted = False  # This client already has a closed connection
+
+    # Manually add the mocked client handlers to the WebSocketService
+    websocket_service.clients.extend([mock_client_1, mock_client_2, mock_client_3])
+
+    # Call the broadcast_shutdown method
     await websocket_service.broadcast_shutdown()
 
-    # Ensure shutdown message is sent to both clients
-    mock_client_1.send_websocket_message.assert_awaited_once_with("Server is shutting down. Closing connection.")
-    mock_client_2.send_websocket_message.assert_awaited_once_with("Server is shutting down. Closing connection.")
+    # Verify that the connected clients received the shutdown message
+    expected_message = "Server is shutting down. Closing connection."
+    mock_client_1.send_websocket_message.assert_awaited_once_with(expected_message)
+    mock_client_2.send_websocket_message.assert_awaited_once_with(expected_message)
 
-    # Ensure both clients were closed SRP problem will refactor
-    # mock_client_1.close_websocket.assert_awaited_once()
-    # mock_client_2.close_websocket.assert_awaited_once()
+    # Verify that the client with a closed connection did not receive any message
+    mock_client_3.send_websocket_message.assert_not_called()
 
-    # Ensure the correct messages were printed for each client
-    mock_print.assert_any_call(f"Notifying {mock_client_1} about server shutdown.")
-    mock_print.assert_any_call(f"Notifying {mock_client_2} about server shutdown.")
-
-    # Ensure clients list is cleared after shutdown
-    assert len(websocket_service.clients) == 0, "Clients list was not cleared after shutdown."
+    # Ensure that the clients list was cleared after the shutdown
+    assert len(websocket_service.clients) == 0, "Clients list should be cleared after shutdown."
 
 
 @pytest.mark.asyncio
@@ -167,7 +243,7 @@ async def test_listen_websocket_service_error_handling(monkeypatch):
 
     # Mock stop to confirm if it's called after the error
     mock_stop = AsyncMock()
-    monkeypatch.setattr(websocket_service, "stop", mock_stop)
+    monkeypatch.setattr(websocket_service, "terminate_client_connection", mock_stop)
 
     # Listen should catch the RuntimeError and call stop
     await websocket_service.listen(mock_controller, AsyncMock())

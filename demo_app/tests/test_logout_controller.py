@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock
 
 from src.core.session import Session
 from src.event_bus import Event
-from src.controllers.base_controller import BaseController
+from src.controllers.http_controller import HTTPController
 
 from demo_app.controllers.logout_controller import logout_controller
 from demo_app.di_setup import di_container
@@ -28,7 +28,7 @@ async def test_logout_controller_success(monkeypatch):
 
     # Monkeypatch BaseController's send_response to track the response flow
     mock_send_response = AsyncMock()
-    monkeypatch.setattr(BaseController, 'send_response', mock_send_response)
+    monkeypatch.setattr(HTTPController, 'send_response', mock_send_response)
 
     session_id = "test-session-id"
     # Simulate a session
@@ -72,7 +72,7 @@ async def test_logout_controller_failure(monkeypatch):
 
     # Monkeypatch BaseController's send_text to track the response flow
     mock_send_text = AsyncMock()
-    monkeypatch.setattr(BaseController, 'send_text', mock_send_text)
+    monkeypatch.setattr(HTTPController, 'send_text', mock_send_text)
 
     # Simulate a missing session (no active session)
     event = Event(name='http.request.received', data={'session': None, 'send': mock_send})

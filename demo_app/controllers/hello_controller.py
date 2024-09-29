@@ -1,4 +1,4 @@
-from src.controllers.base_controller import BaseController
+from src.controllers.http_controller import HTTPController
 from src.event_bus import Event
 
 from demo_app.di_setup import di_container
@@ -19,5 +19,5 @@ async def hello_controller(event: Event):
     response_message = f"Hello from the demo app! Users: {', '.join(usernames)}"
 
     # Send the usernames in the response
-    controller = BaseController(event)
+    controller = HTTPController(event)
     await controller.send_text(response_message)

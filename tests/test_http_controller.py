@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import AsyncMock
 
 from src.event_bus import Event
-from src.controllers.base_controller import BaseController
+from src.controllers.http_controller import HTTPController
 from src.core.response import Response
 from src.services.middleware_service import MiddlewareService
 
@@ -16,7 +16,7 @@ async def test_send_response_with_middleware(monkeypatch):
     event = Event(name='test_event', data={'send': mock_send})
 
     # Step 3: Initialize the BaseController with the event
-    controller = BaseController(event)
+    controller = HTTPController(event)
 
     # Step 4: Create a Response object
     response = Response(content="Test Response", status_code=200, content_type="text/plain")
@@ -53,7 +53,7 @@ async def test_send_response_with_mocked_middleware(monkeypatch):
     event = Event(name='test_event', data={'send': mock_send})
 
     # Step 3: Initialize the BaseController with the event
-    controller = BaseController(event)
+    controller = HTTPController(event)
 
     # Step 4: Create a Response object
     response = Response(content="Test Response", status_code=200, content_type="text/plain")
@@ -93,7 +93,7 @@ async def test_send_response_with_mocked_middleware(monkeypatch):
 async def test_send_text():
     mock_send = AsyncMock()
     event = Event(name='test_event', data={'send': mock_send})
-    controller = BaseController(event)
+    controller = HTTPController(event)
 
     await controller.send_text("Hello, World!")
 
@@ -111,7 +111,7 @@ async def test_send_text():
 async def test_send_html():
     mock_send = AsyncMock()
     event = Event(name='test_event', data={'send': mock_send})
-    controller = BaseController(event)
+    controller = HTTPController(event)
 
     await controller.send_html("<h1>Hello</h1>")
 
@@ -129,7 +129,7 @@ async def test_send_html():
 async def test_send_json():
     mock_send = AsyncMock()
     event = Event(name='test_event', data={'send': mock_send})
-    controller = BaseController(event)
+    controller = HTTPController(event)
 
     await controller.send_json({"key": "value"})
 
@@ -147,7 +147,7 @@ async def test_send_json():
 async def test_send_error():
     mock_send = AsyncMock()
     event = Event(name='test_event', data={'send': mock_send})
-    controller = BaseController(event)
+    controller = HTTPController(event)
 
     await controller.send_error(404, "Not Found")
 

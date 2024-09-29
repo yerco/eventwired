@@ -1,13 +1,13 @@
 from demo_app.forms.register_form import RegisterForm
 from src.event_bus import Event
-from src.controllers.base_controller import BaseController
+from src.controllers.http_controller import HTTPController
 
 from demo_app.di_setup import di_container
 from demo_app.models.user import User
 
 
 async def register_controller(event: Event):
-    controller = BaseController(event)
+    controller = HTTPController(event)
 
     form_service = await di_container.get('FormService')
     template_service = await di_container.get('TemplateService')

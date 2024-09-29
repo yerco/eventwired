@@ -1,13 +1,18 @@
 import pytest
+import os
 from unittest.mock import AsyncMock, Mock, ANY
 
+from src.config import config_service
 from src.core.response import Response
+from src.distributor import config
 from src.event_bus import Event
-from src.controllers.base_controller import BaseController
+from src.controllers.http_controller import HTTPController
 
 from demo_app.controllers.login_controller import login_controller
 from demo_app.di_setup import di_container
 from demo_app.models.user import User
+from demo_app.services.config_service import AppConfigService
+from src.services.template_service import TemplateService
 
 
 @pytest.mark.asyncio
@@ -36,8 +41,8 @@ async def test_login_controller_get_one(monkeypatch):
 
     monkeypatch.setattr(di_container, 'get', mock_get)
 
-    # Monkeypatch BaseController's send_response to track the response flow
-    monkeypatch.setattr(BaseController, 'send_response', mock_send_response)
+    # Monkeypatch HTTPController's send_response to track the response flow
+    monkeypatch.setattr(HTTPController, 'send_response', mock_send_response)
 
     # Mock request with GET method
     mock_request = AsyncMock()
@@ -47,7 +52,7 @@ async def test_login_controller_get_one(monkeypatch):
     # Create the event object and include the 'send' key
     event = Event(name='http.request.received', data={
         'request': mock_request,
-        'send': mock_send,  # Mocked send function for BaseController
+        'send': mock_send,  # Mocked send function for HTTPController
         'csrf_token': 'test_token'
     })
 
@@ -99,8 +104,8 @@ async def test_login_controller_get_two(monkeypatch):
 
     monkeypatch.setattr(di_container, 'get', mock_get)
 
-    # Monkeypatch BaseController's send_response to track the response flow
-    monkeypatch.setattr(BaseController, 'send_response', mock_send_response)
+    # Monkeypatch HTTPController's send_response to track the response flow
+    monkeypatch.setattr(HTTPController, 'send_response', mock_send_response)
 
     # Mock request with GET method
     mock_request = AsyncMock()
@@ -110,7 +115,7 @@ async def test_login_controller_get_two(monkeypatch):
     # Create the event object and include the 'send' key
     event = Event(name='http.request.received', data={
         'request': mock_request,
-        'send': mock_send,  # Mocked send function for BaseController
+        'send': mock_send,  # Mocked send function for HTTPController
         'csrf_token': 'test_token'
     })
 
@@ -173,8 +178,8 @@ async def test_login_controller_post_success(monkeypatch):
 
     monkeypatch.setattr(di_container, 'get', mock_get)
 
-    # Monkeypatch BaseController's send_response to track the response flow
-    monkeypatch.setattr(BaseController, 'send_response', mock_send_response)
+    # Monkeypatch HTTPController's send_response to track the response flow
+    monkeypatch.setattr(HTTPController, 'send_response', mock_send_response)
 
     # Mock request with POST method and valid form data
     mock_request = AsyncMock()
@@ -188,7 +193,7 @@ async def test_login_controller_post_success(monkeypatch):
     # Create the event object and include the 'send' key
     event = Event(name='http.request.received', data={
         'request': mock_request,
-        'send': mock_send,  # Mocked send function for BaseController
+        'send': mock_send,  # Mocked send function for HTTPController
     })
 
     # Call the login_controller
@@ -263,8 +268,8 @@ async def test_login_controller_post_invalid_credentials(monkeypatch):
 
     monkeypatch.setattr(di_container, 'get', mock_get)
 
-    # Monkeypatch BaseController's send_response to track the response flow
-    monkeypatch.setattr(BaseController, 'send_response', mock_send_response)
+    # Monkeypatch HTTPController's send_response to track the response flow
+    monkeypatch.setattr(HTTPController, 'send_response', mock_send_response)
 
     # Mock request with POST method and invalid credentials
     mock_request = AsyncMock()
@@ -278,7 +283,7 @@ async def test_login_controller_post_invalid_credentials(monkeypatch):
     # Create the event object and include the 'send' key
     event = Event(name='http.request.received', data={
         'request': mock_request,
-        'send': mock_send  # Mocked send function for BaseController
+        'send': mock_send  # Mocked send function for HTTPController
     })
 
     # Call the login_controller
@@ -351,8 +356,8 @@ async def test_login_controller_post_invalid_form(monkeypatch):
 
     monkeypatch.setattr(di_container, 'get', mock_get)
 
-    # Monkeypatch BaseController's send_response to track the response flow
-    monkeypatch.setattr(BaseController, 'send_response', mock_send_response)
+    # Monkeypatch HTTPController's send_response to track the response flow
+    monkeypatch.setattr(HTTPController, 'send_response', mock_send_response)
 
     # Mock request with POST method and form data
     mock_request = AsyncMock()
@@ -366,7 +371,7 @@ async def test_login_controller_post_invalid_form(monkeypatch):
     # Create the event object and include the 'send' key
     event = Event(name='http.request.received', data={
         'request': mock_request,
-        'send': mock_send,  # Mocked send function for BaseController
+        'send': mock_send,  # Mocked send function for HTTPController
     })
 
     # Call the login_controller

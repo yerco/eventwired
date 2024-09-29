@@ -1,3 +1,4 @@
+import os.path
 from typing import Dict, Type
 
 from src.services.template_engines.jinja_adapter import JinjaAdapter
@@ -23,4 +24,4 @@ class TemplateService:
         try:
             return self.engine.render(template_name, context)
         except Exception as e:
-            return f"Error rendering template: {e}"
+            return f"Error rendering template {template_name}: {e}"

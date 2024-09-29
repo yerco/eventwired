@@ -1,6 +1,6 @@
 from src.forms.login_form import LoginForm
 from src.event_bus import Event
-from src.controllers.base_controller import BaseController
+from src.controllers.http_controller import HTTPController
 from src.core.session import Session
 
 from demo_app.di_setup import di_container
@@ -8,13 +8,13 @@ from demo_app.models.user import User
 
 
 async def login_controller(event: Event):
-    controller = BaseController(event)
-
     form_service = await di_container.get('FormService')
     template_service = await di_container.get('TemplateService')
     auth_service = await di_container.get('AuthenticationService')
     session_service = await di_container.get('SessionService')
     event_bus = await di_container.get('EventBus')
+
+    controller = HTTPController(event, template_service)
 
     request = event.data['request']
     http_method = request.method

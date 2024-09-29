@@ -1,8 +1,8 @@
-from src.controllers.base_controller import BaseController
+from src.controllers.http_controller import HTTPController
 from src.event_bus import Event
 
 
 async def page_detail_controller(event: Event):
-    controller = BaseController(event)
+    controller = HTTPController(event)
     page_id = event.data['path_params']['id']  # Extracted path parameter
     await controller.send_text(f"Page ID: {page_id}")
