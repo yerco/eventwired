@@ -145,3 +145,43 @@ a.btn-secondary:hover {
 .navigation-links a:hover {
     text-decoration: underline;
 }
+
+.main-content {
+    margin: 40px auto;
+    max-width: 600px;
+    text-align: left;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.user-list ul {
+    list-style-type: disc;
+    margin-left: 20px;
+}
+
+.user-list li {
+    margin-bottom: 10px;
+    font-size: 1em;
+    color: #333;
+}
+
+.features {
+    margin-top: 20px;
+}
+
+.features h2 {
+    color: #007bff;
+}
+
+.features ul {
+    list-style-type: square;
+    margin-left: 20px;
+}
+
+.features li {
+    margin-bottom: 10px;
+    font-size: 1em;
+    color: #333;
+}

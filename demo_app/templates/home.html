@@ -2,15 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ home }}</title>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    {{ text }}
-    <br>
-    <p>Users:</p>
-    {% for user in users %}
-        <p>{{ user.username }}</p>
-    {% endfor %}
+<!-- Navigation Links -->
+<div class="navigation-links">
+    <a href="/">Home</a> |
+    <a href="/login">Login</a> |
+    <a href="/register">Register</a>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+    <h1>{{ home }}</h1>
+    <p>{{ text }}</p>
+
+    <div class="user-list">
+        <h2>Registered Users</h2>
+        {% if users %}
+        <ul>
+            {% for user in users %}
+            <li>{{ user.username }}</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No users are currently registered.</p>
+        {% endif %}
+    </div>
+</div>
 </body>
 </html>

@@ -13,6 +13,11 @@ class DIContainer:
         self._services = {}
         self._singletons = {}
 
+    # Reset the DI container state
+    def reset(self):
+        self._services.clear()
+        self._singletons.clear()
+
     # Register a singleton object, multiple instances of the same class can be registered using different names
     def register_singleton(self, instance, name=None):
         name = name or instance.__class__.__name__

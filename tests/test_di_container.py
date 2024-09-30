@@ -1,7 +1,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
-import asyncio
+
 from src.dicontainer import DIContainer
 
 
@@ -38,14 +38,15 @@ class ServiceB:
 async def di_container():
     # Ensure we have a fresh container for each test
     container = DIContainer()
-    container._services = {}
-    container._singletons = {}
-    return container
+    yield container
+    # Reset after the test to ensure there's no residual state
+    container.reset()
 
 
 # Test for singleton registration
 @pytest.mark.asyncio
 async def test_register_singleton(di_container):
+    di_container.reset()
     config_service = ConfigService(config_name="custom_config")
     di_container.register_singleton(config_service, 'ConfigService')
 
@@ -65,6 +66,7 @@ async def test_register_singleton(di_container):
 # Test for transient registration
 @pytest.mark.asyncio
 async def test_register_transient(di_container):
+    di_container.reset()
     di_container.register_transient(ConfigService, 'ConfigService')
 
     first_instance = await di_container.get('ConfigService')
@@ -82,6 +84,7 @@ async def test_register_transient(di_container):
 # Test for auto-wiring (constructor injection)
 @pytest.mark.asyncio
 async def test_auto_wiring(di_container):
+    di_container.reset()
     # Register services for auto-wiring
     di_container.register_singleton(ServiceA(), 'ServiceA')
     di_container.register_transient(ServiceB, 'ServiceB')
@@ -107,6 +110,7 @@ async def test_auto_wiring(di_container):
 #     assert "Service NonExistentService not found" in str(excinfo.value)
 @pytest.mark.asyncio
 async def test_service_not_found(di_container):
+    di_container.reset()
     try:
         await di_container.get('NonExistentService')
     except Exception as e:
@@ -120,6 +124,7 @@ async def test_service_not_found(di_container):
 # Test for complex dependency graph with multiple services
 @pytest.mark.asyncio
 async def test_complex_dependency_graph(di_container):
+    di_container.reset()
     # Register singleton and transient services in the DI container
     di_container.register_singleton(ConfigService(config_name="main_config"), 'ConfigService')
     di_container.register_transient(DatabaseService, 'DatabaseService')
@@ -146,6 +151,7 @@ async def test_complex_dependency_graph(di_container):
 # Test singleton auto-wiring
 @pytest.mark.asyncio
 async def test_singleton_auto_wiring(di_container):
+    di_container.reset()
     config_service = ConfigService("singleton_config")
     di_container.register_singleton(config_service, 'ConfigService')
 

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<!-- Navigation Links -->
+<div class="navigation-links">
+  <a href="/">Home</a> |
+  <a href="/login">Login</a> |
+  <a href="/register">Register</a>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+  <h1>{{ greeting }}</h1>
+  <p>{{ description }}</p>
+
+  <!-- Main Content -->
+  <div>
+
+    <div class="features">
+      <h2>Key Features</h2>
+      {% if features %}
+      <ul>
+        {% for feature in features %}
+        <li>{{ feature }}</li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p>No features available at this time.</p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="user-list">
+    <h2>Registered Users</h2>
+    {% if users %}
+    <ul>
+      {% for username in users %}
+      <li>{{ username }}</li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>No users are currently registered.</p>
+    {% endif %}
+  </div>
+</div>
+</body>
+</html>
