@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome, {{ user.username }}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="form-container">
+    <h1>Welcome, {{ user.username }}!</h1>
+    <p>You have successfully logged in. Enjoy your session!</p>
+
+    <!-- Logout Button -->
+    <form method="GET" action="/logout" class="logout-form">
+        <button type="submit" class="btn-primary">Logout</button>
+    </form>
+</div>
+</body>
+</html>

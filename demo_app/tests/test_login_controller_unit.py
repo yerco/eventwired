@@ -165,6 +165,9 @@ async def test_login_controller_post_success(monkeypatch):
     mock_user = User(id=1, username='validuser')
     mock_authentication_service.authenticate_user.return_value = mock_user
 
+    # Set the mock TemplateService to return proper HTML content
+    mock_template_service.render_template.return_value = "Login successful! Welcome, validuser."
+
     # Monkeypatch the DI container to return the mocked services
     async def mock_get(service_name):
         services = {
@@ -221,8 +224,8 @@ async def test_login_controller_post_success(monkeypatch):
     # Extract the response object from the call args
     response = mock_send_response.call_args[0][0]  # First positional arg is the response object
 
-    # Check response content and status
-    assert response.content == "Login successful! Welcome, validuser."
+    # Await the content of the response to get the actual value
+    assert await response.content == "Login successful! Welcome, validuser."
     assert response.status_code == 200
 
 

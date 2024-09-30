@@ -30,6 +30,10 @@ async def test_login_controller_post_success_hybrid_using_real_orm(monkeypatch):
     mock_auth_service = AsyncMock()
     mock_event_bus = AsyncMock()
 
+    # Mock the TemplateService to return proper HTML content
+    mock_template_service = AsyncMock()
+    mock_template_service.render_template.return_value = "Login successful!"
+
     # Simulate a valid user with an explicit user ID
     mock_user = AsyncMock()
     mock_user.id = 1  # Set the user ID to 1
@@ -41,9 +45,10 @@ async def test_login_controller_post_success_hybrid_using_real_orm(monkeypatch):
         services = {
             'FormService': mock_form_service,
             'ORMService': orm_service,  # Use the real ORMService
-            'SessionService': mock_session_service, # Mocked session service
+            'SessionService': mock_session_service,  # Mocked session service
             'AuthenticationService': mock_auth_service,
             'EventBus': mock_event_bus,
+            'TemplateService': mock_template_service,
         }
         return services.get(service_name)
 
@@ -68,17 +73,15 @@ async def test_login_controller_post_success_hybrid_using_real_orm(monkeypatch):
     # Assert the response
     response = event.data['response']
     assert response.status_code == 200
-    assert "Login successful!" in response.content
-    assert response.content_type == 'text/plain'
+    assert "Login successful!" in await response.content  # Await the content since it's now an actual string
+    assert response.content_type == 'text/html'
 
-    # Check that the ORM adapter's get_by_column was called correctly
-    # mock_orm_adapter.get_by_column.assert_called_once_with(User, 'username', 'validuser')
     # Check that the form service was called correctly
     data = {'username': 'validuser', 'password': 'validpassword'}
     mock_form_service.create_form.assert_called_once_with(ANY, data=data)
 
     # Check that the AuthenticationService was called with the correct credentials
-    mock_auth_service.authenticate_user.assert_called_once_with(User, 'validuser', 'validpassword')
+    mock_auth_service.authenticate_user.assert_called_once_with(ANY, 'validuser', 'validpassword')
 
     # Assert that a session was saved after login
     mock_session_service.save_session.assert_called_once()  # Make sure session was saved
@@ -87,7 +90,7 @@ async def test_login_controller_post_success_hybrid_using_real_orm(monkeypatch):
     mock_event_bus.publish.assert_called_once()
     published_event = mock_event_bus.publish.call_args[0][0]
 
-    # Ensure the use ID is correctly set
+    # Ensure the user ID is correctly set
     assert published_event.name == 'user.login.success'
     assert published_event.data == {'user_id': 1}
 

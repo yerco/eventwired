@@ -63,7 +63,9 @@ async def login_controller(event: Event):
                 login_event = Event(name='user.login.success', data={'user_id': user.id})
                 await event_bus.publish(login_event)
 
-                await controller.send_text(f"Login successful! Welcome, {user.username}.")
+                context = {"user": user}
+                rendered_content = template_service.render_template('welcome_after_login.html', context)
+                await controller.send_html(rendered_content)
             else:
                 # If the username doesn't exist or password is incorrect
                 if 'login' not in errors:

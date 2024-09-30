@@ -1,7 +1,9 @@
 import re
+import os
 
 from typing import Callable, Dict, Union, List, Optional
 
+from src.core.static_handler import StaticFilesHandler
 from src.event_bus import Event, EventBus
 from src.services.config_service import ConfigService
 from src.services.template_service import TemplateService
@@ -19,12 +21,7 @@ class RoutingService:
         }
         self._template_service: Optional[TemplateService] = None
         self.authenticated_routes: List[str] = []
-
-    @property
-    def template_service(self) -> TemplateService:
-        if self._template_service is None:
-            self._template_service = TemplateService(config_service=self.config_service)
-        return self._template_service
+        self.static_handler = StaticFilesHandler(static_dir="static", static_url_path="/static")
 
     def add_route(self, path: str, methods: Union[str, List[str]], handler: Callable, requires_auth: bool = False):
         if path not in self.routes:
@@ -43,6 +40,18 @@ class RoutingService:
             # If authentication is required, add the path to the authenticated routes list
             if requires_auth:
                 self.authenticated_routes.append(regex_path)
+
+    def setup_static_routes(self, static_dir: str, static_url_path: str = "/static"):
+        # Convert static_dir to an absolute path
+        static_dir_abs = os.path.abspath(static_dir)
+        # Initialize StaticFilesHandler with the provided directory and URL path
+        self.static_handler = StaticFilesHandler(static_dir=static_dir_abs, static_url_path=static_url_path)
+
+        # Convert the static path to a regex
+        static_regex = r'^/static/(?P<filename>.+)$'
+        self.routes[static_regex] = {
+            'GET': self.static_handler.handle
+        }
 
     def _convert_path_to_regex(self, path: str) -> str:
         def replace(match):
@@ -77,6 +86,12 @@ class RoutingService:
         # Extract the path and method from the request
         path = request.path
         method = request.method
+
+        # Check if the request is for static files first
+        if path.startswith(self.static_handler.static_url_path):
+            filename = path[len(self.static_handler.static_url_path):].lstrip("/")
+            event.data['path_params'] = {'filename': filename}
+            return await self.static_handler.handle(event)
 
         # Check each registered route regex for a match
         for regex_path, methods in self.routes.items():

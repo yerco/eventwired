@@ -1,0 +1,147 @@
+/* General Page Styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    color: #333;
+    padding: 50px;
+    margin: 0;
+}
+
+/* Welcome Page Styling */
+.content {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+h1 {
+    color: #007bff;
+    margin-bottom: 20px;
+}
+
+.cta {
+    margin-top: 20px;
+    text-align: left;
+}
+
+.examples {
+    margin-top: 30px;
+}
+
+pre {
+    background-color: #f8f8f8;
+    padding: 15px;
+    border-radius: 4px;
+    text-align: left; /* Ensure the text in code blocks is left-aligned */
+    white-space: pre-wrap; /* Allows wrapping in the code block */
+    font-size: 14px;
+    overflow-x: auto;
+}
+
+code {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+}
+
+.note {
+    margin-top: 20px;
+    font-style: italic;
+    color: #555;
+}
+
+/* Form Styling */
+.form-container {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    margin: 20px auto;
+    text-align: left;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    outline: none;
+}
+
+.error-list {
+    margin-top: 8px;
+    list-style-type: none;
+    padding-left: 0;
+    color: #ff4c4c;
+    font-size: 14px;
+}
+
+/* Button Styling */
+button.btn-primary {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.button-container {
+    margin-top: 20px;
+    text-align: center;
+}
+
+a.btn-secondary {
+    display: inline-block;
+    margin: 10px;
+    padding: 10px 20px;
+    background-color: #6c757d;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+a.btn-secondary:hover {
+    background-color: #5a6268;
+    text-decoration: none;
+}
+
+/* Navigation Links Styling */
+.navigation-links {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.navigation-links a {
+    margin: 0 10px;
+    text-decoration: none;
+    color: #007bff;
+}
+
+.navigation-links a:hover {
+    text-decoration: underline;
+}

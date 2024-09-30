@@ -20,6 +20,9 @@ async def user_startup_callback(di_container):
     # Custom route registration logic for the user app
     register_routes(routing_service)
 
+    # Set up static file routes with the user-provided static directory
+    routing_service.setup_static_routes(static_dir="demo_app/static", static_url_path="/static")
+
 
 async def app(scope: dict, receive: Callable, send: Callable) -> None:
     try:

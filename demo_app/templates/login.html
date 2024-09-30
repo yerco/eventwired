@@ -2,14 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <form method="POST" action="/login">
+<div class="form-container">
+    <!-- Navigation Links -->
+    <div class="navigation-links">
+        <a href="/">Home</a> |
+        <a href="/login">Login</a> |
+        <a href="/register">Register</a>
+    </div>
+    <h1>Login</h1>
+    <form method="POST" action="/login" class="login-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
         <!-- General Login Error (e.g., Invalid username or password) -->
         {% if errors.login %}
-        <ul>
+        <ul class="error-list">
             {% for error in errors.login %}
             <li>{{ error }}</li>
             {% endfor %}
@@ -17,28 +28,38 @@
         {% endif %}
 
         <!-- Username Field -->
-        <label for="username">Username</label>
-        <input type="text" name="username" placeholder="Enter your username" value="{{ form.fields['username'].value or '' }}">
-        {% if errors.username %}
-        <ul>
-            {% for error in errors %}
-            <li>{{ error }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" placeholder="Enter your username"
+                   value="{{ form.fields['username'].value or '' }}" class="form-control">
+            {% if errors.username %}
+            <ul class="error-list">
+                {% for error in errors.username %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
 
         <!-- Password Field -->
-        <label for="password">Password</label>
-        <input type="password" name="password" placeholder="Enter your password" value="{{ form.fields['password'].value or '' }}">
-        {% if errors.password %}
-        <ul>
-            {% for error in errors.password %}
-            <li>{{ error }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Enter your password"
+                   value="{{ form.fields['password'].value or '' }}" class="form-control">
+            {% if errors.password %}
+            <ul class="error-list">
+                {% for error in errors.password %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
 
-        <button type="submit">Login</button>
+        <!-- Submit Button -->
+        <div class="form-group">
+            <button type="submit" class="btn-primary">Login</button>
+        </div>
     </form>
+</div>
 </body>
 </html>

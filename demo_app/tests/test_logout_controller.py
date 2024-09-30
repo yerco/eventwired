@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, create_autospec
 
 from src.core.session import Session
 from src.event_bus import Event
@@ -15,12 +15,14 @@ async def test_logout_controller_success(monkeypatch):
     mock_publisher_service = AsyncMock()
     mock_session_service = AsyncMock()
     mock_send = AsyncMock()
+    mock_template_service = AsyncMock()
 
     # Monkeypatch the DI container to return the mocked services
     async def mock_get(service_name):
         services = {
             'PublisherService': mock_publisher_service,
             'SessionService': mock_session_service,
+            'TemplateService': mock_template_service,
         }
         return services[service_name]
 
@@ -29,6 +31,8 @@ async def test_logout_controller_success(monkeypatch):
     # Monkeypatch BaseController's send_response to track the response flow
     mock_send_response = AsyncMock()
     monkeypatch.setattr(HTTPController, 'send_response', mock_send_response)
+
+    mock_template_service.render_template.return_value = 'You have been logged out.'
 
     session_id = "test-session-id"
     # Simulate a session
@@ -51,7 +55,7 @@ async def test_logout_controller_success(monkeypatch):
     response = mock_send_response.call_args[0][0]  # First positional arg is the response object
 
     # Check response content and headers
-    assert response.content == "You have been logged out."
+    assert await response.content == "You have been logged out."
     assert any(b'set-cookie' in header for header in response.headers), "Expected 'set-cookie' header in response."
 
 
@@ -60,19 +64,21 @@ async def test_logout_controller_failure(monkeypatch):
     # Create mock services
     mock_publisher_service = AsyncMock()
     mock_send = AsyncMock()
+    mock_template_service = AsyncMock()
 
-    # Monkeypatch the DI container to return the mocked PublisherService (no SessionService needed here)
+    # Monkeypatch the DI container to return the mocked services
     async def mock_get(service_name):
         services = {
             'PublisherService': mock_publisher_service,
+            'TemplateService': mock_template_service,
         }
         return services[service_name]
 
     monkeypatch.setattr(di_container, 'get', mock_get)
 
-    # Monkeypatch BaseController's send_text to track the response flow
-    mock_send_text = AsyncMock()
-    monkeypatch.setattr(HTTPController, 'send_text', mock_send_text)
+    # Monkeypatch HTTPController's send_html to track the response flow
+    mock_send_html = AsyncMock()
+    monkeypatch.setattr(HTTPController, 'send_html', mock_send_html)
 
     # Simulate a missing session (no active session)
     event = Event(name='http.request.received', data={'session': None, 'send': mock_send})
@@ -83,5 +89,8 @@ async def test_logout_controller_failure(monkeypatch):
     # Check that the publisher service was called for failure
     mock_publisher_service.publish_logout_failure.assert_called_once()
 
-    # Assert that send_text was called with the appropriate error message
-    mock_send_text.assert_called_once_with("No active session found.", status=400)
+    # Assert that send_html was called with the appropriate arguments
+    mock_send_html.assert_called_once_with(
+        template='logout.html',
+        context={"message": "No active session found"}
+    )
