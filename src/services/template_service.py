@@ -16,9 +16,11 @@ TEMPLATE_ENGINES: Dict[str, Type[TemplateEngine]] = {
 
 class TemplateService:
     def __init__(self, config_service: ConfigService = ConfigService()):
+        self.config_service = config_service
         engine_name = config_service.get('TEMPLATE_ENGINE', 'JinjaAdapter')
         engine_class = TEMPLATE_ENGINES.get(engine_name, JinjaAdapter)  # Default to JinjaAdapter if not found
-        self.engine = engine_class(template_dir=config_service.get('TEMPLATE_DIR', 'templates'))
+        template_dir = config_service.get('TEMPLATE_DIR', 'templates')
+        self.engine = engine_class(template_dir=template_dir)
 
     def render_template(self, template_name: str, context: Dict[str, str]) -> str:
         try:

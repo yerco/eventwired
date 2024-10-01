@@ -6,12 +6,13 @@ from typing import Callable, Dict, Union, List, Optional
 from src.core.static_handler import StaticFilesHandler
 from src.event_bus import Event, EventBus
 from src.services.config_service import ConfigService
-from src.services.template_service import TemplateService
+from src.services.security.authentication_service import AuthenticationService
 
 
 class RoutingService:
-    def __init__(self, event_bus: EventBus, config_service: ConfigService = ConfigService()):
+    def __init__(self, event_bus: EventBus, auth_service: AuthenticationService, config_service: ConfigService = ConfigService()):
         self.event_bus = event_bus
+        self.auth_service = auth_service
         self.config_service = config_service
         self.routes: Dict[str, Dict[str, Callable]] = {}
         self.patterns = {
@@ -19,7 +20,6 @@ class RoutingService:
             r'<str:(\w+)>': r'(?P<\1>[^/]+)',
             r'<(\w+)>': r'(?P<\1>[^/]+)',  # General pattern for other types
         }
-        self._template_service: Optional[TemplateService] = None
         self.authenticated_routes: List[str] = []
         self.static_handler = StaticFilesHandler(static_dir="static", static_url_path="/static")
 
@@ -105,26 +105,13 @@ class RoutingService:
                     # Check if user is logged in (i.e., session contains user_id)
                     session = event.data.get('session')
                     if not session or not session.get('user_id'):
-                        return await self.send_unauthorized(event)
+                        return await self.auth_service.send_unauthorized(event)
 
                 # If authentication is not required or the user is logged in, proceed with the request
                 handler = methods[method]
                 return await handler(event)
 
         await self.handle_404(event)
-
-    async def send_unauthorized(self, event: Event):
-        send = event.data.get('send')
-        if send:
-            await send({
-                'type': 'http.response.start',
-                'status': 401,
-                'headers': [[b'content-type', b'text/plain']],
-            })
-            await send({
-                'type': 'http.response.body',
-                'body': b'Unauthorized: Please log in to access this page.',
-            })
 
     async def handle_404(self, event: Event):
         send = event.data.get('send')

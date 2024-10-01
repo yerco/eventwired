@@ -1,15 +1,21 @@
 import pytest
 from unittest.mock import AsyncMock
+
+from demo_app.di_setup import auth_service, orm_service
+from src.services.config_service import ConfigService
 from src.services.routing_service import RoutingService
 from src.event_bus import Event, EventBus
 from src.core.request import Request
+from src.services.security.authentication_service import AuthenticationService
 
 
 # HTTP
 @pytest.mark.asyncio
 async def test_add_and_remove_route():
     event_bus = EventBus()
-    routing_service = RoutingService(event_bus=event_bus)
+    config_service = AsyncMock()
+    auth_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
 
     handler = AsyncMock()
 
@@ -33,7 +39,9 @@ async def test_add_and_remove_route():
 @pytest.mark.asyncio
 async def test_route_to_correct_handler(monkeypatch):
     event_bus = EventBus()
-    routing_service = RoutingService(event_bus=event_bus)
+    config_service = AsyncMock()
+    auth_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
 
     handler = AsyncMock()
 
@@ -60,7 +68,9 @@ async def test_route_to_correct_handler(monkeypatch):
 @pytest.mark.asyncio
 async def test_handle_404(monkeypatch):
     event_bus = EventBus()
-    routing_service = RoutingService(event_bus=event_bus)
+    config_service = AsyncMock()
+    auth_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
 
     # Create a mock event that should trigger a 404
     mock_send = AsyncMock()
@@ -89,7 +99,9 @@ async def test_handle_404(monkeypatch):
 @pytest.mark.asyncio
 async def test_multiple_routes_and_methods(monkeypatch):
     event_bus = EventBus()
-    routing_service = RoutingService(event_bus=event_bus)
+    config_service = AsyncMock()
+    auth_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
 
     handler_get = AsyncMock()
     handler_post = AsyncMock()
@@ -128,7 +140,9 @@ async def test_multiple_routes_and_methods(monkeypatch):
 @pytest.mark.asyncio
 async def test_route_with_int_param(monkeypatch):
     event_bus = EventBus()
-    routing_service = RoutingService(event_bus=event_bus)
+    config_service = AsyncMock()
+    auth_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
 
     handler = AsyncMock()
 
@@ -157,7 +171,9 @@ async def test_route_with_int_param(monkeypatch):
 @pytest.mark.asyncio
 async def test_route_with_str_param(monkeypatch):
     event_bus = EventBus()
-    routing_service = RoutingService(event_bus=event_bus)
+    config_service = AsyncMock()
+    auth_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
 
     handler = AsyncMock()
 
@@ -186,7 +202,9 @@ async def test_route_with_str_param(monkeypatch):
 @pytest.mark.asyncio
 async def test_route_with_multiple_params(monkeypatch):
     event_bus = EventBus()
-    routing_service = RoutingService(event_bus=event_bus)
+    config_service = AsyncMock()
+    auth_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
 
     handler = AsyncMock()
 
@@ -215,7 +233,9 @@ async def test_route_with_multiple_params(monkeypatch):
 @pytest.mark.asyncio
 async def test_handle_404_for_unmatched_param_route(monkeypatch):
     event_bus = EventBus()
-    routing_service = RoutingService(event_bus=event_bus)
+    config_service = AsyncMock()
+    auth_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
 
     # Add a route that expects an integer parameter
     routing_service.add_route('/page/<int:id>', 'GET', AsyncMock())
@@ -252,7 +272,9 @@ async def test_handle_404_for_unmatched_param_route(monkeypatch):
 @pytest.mark.asyncio
 async def test_websocket_route_add_and_remove():
     event_bus = EventBus()
-    routing_service = RoutingService(event_bus=event_bus)
+    config_service = AsyncMock()
+    auth_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
 
     handler = AsyncMock()
 
@@ -276,7 +298,9 @@ async def test_websocket_route_add_and_remove():
 @pytest.mark.asyncio
 async def test_route_to_correct_websocket_handler(monkeypatch):
     event_bus = EventBus()
-    routing_service = RoutingService(event_bus=event_bus)
+    config_service = AsyncMock()
+    auth_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
 
     handler = AsyncMock()
 
@@ -306,7 +330,9 @@ async def test_route_to_correct_websocket_handler(monkeypatch):
 @pytest.mark.asyncio
 async def test_handle_websocket_disconnect(monkeypatch):
     event_bus = EventBus()
-    routing_service = RoutingService(event_bus=event_bus)
+    config_service = AsyncMock()
+    auth_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
 
     handler = AsyncMock()
 
@@ -344,7 +370,9 @@ async def test_handle_websocket_disconnect(monkeypatch):
 @pytest.mark.asyncio
 async def test_handle_websocket_binary_message(monkeypatch):
     event_bus = EventBus()
-    routing_service = RoutingService(event_bus=event_bus)
+    config_service = AsyncMock()
+    auth_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
 
     handler = AsyncMock()
 

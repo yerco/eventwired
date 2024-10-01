@@ -47,3 +47,19 @@ h1 {
     padding: 10px;
     border-radius: 4px;
 }
+
+/* Navigation Links Styling */
+.navigation-links {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.navigation-links a {
+    margin: 0 10px;
+    text-decoration: none;
+    color: #007bff;
+}
+
+.navigation-links a:hover {
+    text-decoration: underline;
+}

@@ -36,13 +36,14 @@ orm_service = ORMService(config_service=config_service, Base=Base)
 di_container.register_singleton(orm_service, 'ORMService')
 
 di_container.register_transient(PasswordService, 'PasswordService')
-di_container.register_transient(AuthenticationService, 'AuthenticationService')
+auth_service = AuthenticationService(orm_service=orm_service, config_service=config_service)
+di_container.register_singleton(auth_service, 'AuthenticationService')
 
 # Initialize the session service and register it
 session_service = SessionService(orm_service=orm_service, config_service=config_service)
 di_container.register_singleton(session_service, 'SessionService')
 
-routing_service = RoutingService(event_bus=event_bus, config_service=config_service)
+routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
 di_container.register_singleton(routing_service, 'RoutingService')
 
 publisher_service = PublisherService(event_bus=event_bus)
