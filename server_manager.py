@@ -31,11 +31,13 @@ class ServerManager:
         try:
             # Start the server in a separate task
             server_task = asyncio.create_task(self.server.serve())
+            shutdown_task = asyncio.create_task(self.should_exit.wait())  # Create a task for the shutdown event
 
             # Wait for either server completion or shutdown signal
-            await asyncio.wait([server_task, self.should_exit.wait()], return_when=asyncio.FIRST_COMPLETED)
+            done, pending = await asyncio.wait([server_task, shutdown_task], return_when=asyncio.FIRST_COMPLETED)
 
-            if not server_task.done():
+            # If the server task is still pending, trigger the shutdown
+            if server_task in pending:
                 self.server.should_exit = True
                 await server_task
 
