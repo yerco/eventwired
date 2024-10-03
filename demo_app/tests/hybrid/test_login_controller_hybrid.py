@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, Mock, ANY
 from src.event_bus import Event
 
 from demo_app.controllers.login_controller import login_controller
-from demo_app.models.user import User
 from demo_app.di_setup import di_container
 
 

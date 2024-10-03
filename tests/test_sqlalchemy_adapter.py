@@ -97,8 +97,15 @@ async def test_update(adapter):
     # Create a test instance
     created_instance = await adapter.create(ModelForTesting, name="Original Name")
 
-    # Test updating the instance
-    updated_instance = await adapter.update(ModelForTesting, created_instance.id, name="Updated Name")
+    # Test updating the instance and explicitly request the updated instance
+    updated_instance = await adapter.update(
+        ModelForTesting,
+        lookup_value=created_instance.id,
+        name="Updated Name",
+        return_instance=True  # Explicitly request the updated instance
+    )
+
+    # Assertions to verify the update
     assert updated_instance is not None, "The instance should be updated."
     assert updated_instance.name == "Updated Name", "The name of the instance should be updated."
 

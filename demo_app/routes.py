@@ -7,6 +7,8 @@ from demo_app.controllers.logout_controller import logout_controller
 from demo_app.controllers.welcome_controller import welcome_controller
 from demo_app.controllers.render_chat_room_controller import render_chat_room_controller
 from demo_app.controllers.chat_room_controller import chat_room_controller
+from demo_app.controllers.queries_books_controller import queries_books_controller
+from demo_app.controllers.commands_books_controller import commands_books_controller
 
 def register_routes(routing_service):
     routing_service.add_route('/', 'GET', welcome_controller)
@@ -18,3 +20,13 @@ def register_routes(routing_service):
     routing_service.add_route('/logout', 'GET', logout_controller)
     routing_service.add_route('/chat_room', 'GET', render_chat_room_controller)
     routing_service.add_route('/myws', 'WEBSOCKET', chat_room_controller)
+    # Command
+    routing_service.add_route('/books/action/add', ['POST'], commands_books_controller)
+    routing_service.add_route('/books/<str:title>/edit', ['POST'], commands_books_controller)
+    routing_service.add_route('/books/<str:title>/delete', ['POST'], commands_books_controller)
+    # Query
+    routing_service.add_route('/books', ['GET'], queries_books_controller)
+    routing_service.add_route('/books/action/add', ['GET'], queries_books_controller)
+    routing_service.add_route('/books/<str:title>', ['GET'], queries_books_controller)
+    routing_service.add_route('/books/<str:title>/edit', ['GET'], queries_books_controller)  # just to show the form
+

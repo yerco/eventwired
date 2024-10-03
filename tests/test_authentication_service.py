@@ -58,7 +58,7 @@ def auth_service(orm_service, config_service):
 async def test_authenticate_user_success(auth_service):
     # Mock user with password
     mock_user = User(username="validuser", password="hashed_password")
-    auth_service.orm_service.get_by_column.return_value = mock_user
+    auth_service.orm_service.get.return_value = mock_user
     auth_service.password_service.check_password = MagicMock(return_value=True)
 
     # Test the authentication of a valid user
@@ -69,7 +69,7 @@ async def test_authenticate_user_success(auth_service):
 @pytest.mark.asyncio
 async def test_authenticate_user_failure(auth_service):
     # Mock ORM to return None (user not found)
-    auth_service.orm_service.get_by_column.return_value = None
+    auth_service.orm_service.get.return_value = None
 
     # Test authentication of a non-existing user
     result = await auth_service.authenticate_user(User, "nonexistentuser", "password")
@@ -81,11 +81,11 @@ async def test_authenticate_user_wrong_password():
     # Arrange
     # Create a mock ORMService
     mock_orm_service = AsyncMock()
-    # Simulate ORMService's get_by_column to return a User instance
+    # Simulate ORMService's get to return a User instance
     mock_user = MagicMock()
     mock_user.username = 'validuser'
     mock_user.password = 'hashed_correctpassword'  # This should match the hashed value
-    mock_orm_service.get_by_column.return_value = mock_user
+    mock_orm_service.get.return_value = mock_user
 
     # Create a mock PasswordService
     mock_password_service = MagicMock()
@@ -105,10 +105,11 @@ async def test_authenticate_user_wrong_password():
 
     result = await auth_service.authenticate_user(User, "validuser", "wrongpassword")
 
+    # Assert
     assert result is None
 
-    # Verify that get_by_column was called with the correct arguments
-    mock_orm_service.get_by_column.assert_called_once_with(User, column="username", value="validuser")
+    # Verify that get was called with the correct arguments
+    mock_orm_service.get.assert_called_once_with(User, lookup_value="validuser", lookup_column="username")
     # Verify that check_password was called with the correct arguments
     mock_password_service.check_password.assert_called_once_with("wrongpassword", mock_user.password)
 

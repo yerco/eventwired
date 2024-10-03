@@ -16,7 +16,10 @@ async def test_load_existing_session():
     mock_config_service.get.return_value = 3600  # 1 hour in seconds
 
     # Step 2: Mock ORM service to return a session when queried
-    mock_orm_service.get_by_column.return_value = AsyncMock(session_data=mock_session_data, expires_at=mock_expiration)
+    mock_session = AsyncMock()
+    mock_session.session_data = mock_session_data
+    mock_session.expires_at = mock_expiration
+    mock_orm_service.get.return_value = mock_session
 
     # Step 3: Create the session service instance
     session_service = SessionService(orm_service=mock_orm_service, config_service=mock_config_service)
@@ -26,7 +29,7 @@ async def test_load_existing_session():
     assert result == {"user_id": 123}
 
     # Step 5: Ensure ORM service was called with correct arguments
-    mock_orm_service.get_by_column.assert_called_once_with(SessionModel, "session_id", "test-session-id")
+    mock_orm_service.get.assert_called_once_with(SessionModel, lookup_value="test-session-id", lookup_column="session_id")
 
 
 @pytest.mark.asyncio
@@ -36,7 +39,7 @@ async def test_load_nonexistent_session():
     mock_config_service = AsyncMock()
 
     # Step 2: Mock ORM service to return None (no session found)
-    mock_orm_service.get_by_column.return_value = None
+    mock_orm_service.get.return_value = None
 
     # Step 3: Create the session service instance
     session_service = SessionService(orm_service=mock_orm_service, config_service=mock_config_service)
@@ -46,7 +49,7 @@ async def test_load_nonexistent_session():
     assert result == {}
 
     # Step 5: Ensure ORM service was called with correct arguments
-    mock_orm_service.get_by_column.assert_called_once_with(SessionModel, "session_id", "nonexistent-session-id")
+    mock_orm_service.get.assert_called_once_with(SessionModel, lookup_value="nonexistent-session-id", lookup_column="session_id")
 
 
 @pytest.mark.asyncio
@@ -75,7 +78,10 @@ async def test_load_expired_session():
     mock_expiration = datetime.datetime.utcnow() - datetime.timedelta(hours=1)  # Expired session
 
     # Step 2: Mock ORM service to return an expired session
-    mock_orm_service.get_by_column.return_value = AsyncMock(session_data=mock_session_data, expires_at=mock_expiration)
+    mock_session = AsyncMock()
+    mock_session.session_data = mock_session_data
+    mock_session.expires_at = mock_expiration
+    mock_orm_service.get.return_value = mock_session
 
     # Step 3: Create the session service instance
     session_service = SessionService(orm_service=mock_orm_service, config_service=mock_config_service)
@@ -96,7 +102,7 @@ async def test_save_new_session():
     mock_config_service.get = lambda key, default: 3600  # Return 3600 seconds directly
 
     # Step 2: Mock the ORM service to return None (no session exists with this session_id)
-    mock_orm_service.get_by_column.return_value = None
+    mock_orm_service.get.return_value = None
 
     # Mock config service to return a valid session duration
     mock_config_service.get.return_value = 3600  # 1 hour
@@ -130,7 +136,7 @@ async def test_save_existing_session():
     mock_config_service.get.return_value = 3600  # 1 hour
 
     # Step 2: Mock ORM service to return an existing session
-    mock_orm_service.get_by_column.return_value = AsyncMock()
+    mock_orm_service.get.return_value = AsyncMock()
 
     # Step 3: Create the session service instance
     session_service = SessionService(orm_service=mock_orm_service, config_service=mock_config_service)
@@ -163,5 +169,5 @@ async def test_delete_session():
     # Step 3: Call delete_session with a session ID
     await session_service.delete_session("session-id-to-delete")
 
-    # Step 4: Ensure ORM service was called to delete the session
-    mock_orm_service.delete.assert_called_once_with(SessionModel, session_id="session-id-to-delete")
+    # Step 4: Ensure ORM service was called to delete the session using the correct parameter
+    mock_orm_service.delete.assert_called_once_with(SessionModel, lookup_value="session-id-to-delete", lookup_column="session_id")

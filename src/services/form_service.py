@@ -57,6 +57,15 @@ class RangeValidator(Validator):
                 return "Enter a valid number."
 
 
+class IntegerValidator(Validator):
+    def __call__(self, field):
+        if field.value is not None:
+            try:
+                int(field.value)
+            except (ValueError, TypeError):
+                return "Enter a valid integer."
+
+
 class Field:
     def __init__(self, field_type="text", required=True, value=None, validators=None):
         self.type = field_type
@@ -95,7 +104,14 @@ class EmailField(Field):
 
 class NumberField(Field):
     def __init__(self, required=True, value=None, validators=None):
-        super().__init__(field_type="number", required=required, value=value, validators=validators)
+        default_validators = [RangeValidator()] if validators is None else validators
+        super().__init__(field_type="number", required=required, value=value, validators=default_validators)
+
+
+class IntegerField(Field):
+    def __init__(self, required=True, value=None, validators=None):
+        default_validators = [IntegerValidator()]
+        super().__init__(field_type="integer", required=required, value=value, validators=validators or default_validators)
 
 
 class PasswordField(TextField):
@@ -117,6 +133,11 @@ class BaseForm(metaclass=FormMeta):
         self.data = {key: (value[0] if isinstance(value, list) else value) for key, value in (data or {}).items()}
         self.errors = {}
         self.fields = {name: field for name, field in self._fields.items()}  # Clone fields
+
+        # Set initial values for each field
+        for field_name, field in self.fields.items():
+            if field_name in self.data:
+                field.set_value(self.data[field_name])
 
     async def is_valid(self):
         self.errors = {}

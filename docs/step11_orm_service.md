@@ -36,7 +36,7 @@ await orm_service.init(models=[UserModel, ProductModel])
 new_user = await orm_service.create(UserModel, username="testuser", email="test@example.com")
 user = await orm_service.get(UserModel, identifier=new_user.id)
 await orm_service.update(UserModel, identifier=user.id, email="newemail@example.com")
-await orm_service.delete(UserModel, identifier=user.id)
+await orm_service.delete(UserModel, primary_key_value=user.id)
 ```
 
 ## Abandoning the Service Manager

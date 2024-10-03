@@ -1,4 +1,5 @@
 import os
+from mailcap import lookup
 
 import pytest
 from sqlalchemy import Column, Integer, String
@@ -64,19 +65,70 @@ async def test_create_sqlalchemy(orm_service):
     assert instance.name == "Test Instance", "The name of the instance should be as expected."
 
 
+# Test to demonstrate get by primary key
 @pytest.mark.asyncio
-async def test_get_sqlalchemy(orm_service):
+async def test_get_by_primary_key(orm_service):
     instance = await orm_service.create(ModelForTestingTwo, something="Test something")
     retrieved_instance = await orm_service.get(ModelForTestingTwo, instance.id)
+
     assert retrieved_instance.id == instance.id, "The retrieved instance ID should match the created instance ID."
-    assert retrieved_instance.something == "Test something", "The retrieved instance name should match the created instance name."
+    assert retrieved_instance.something == "Test something", "The retrieved instance data should match the created data."
 
 
 @pytest.mark.asyncio
-async def test_update_sqlalchemy(orm_service):
+async def test_get_by_column(orm_service):
+    # Arrange
+    instance = await orm_service.create(ModelForTestingOne, name="Unique Name")
+
+    # Act
+    retrieved_instance = await orm_service.get(ModelForTestingOne, lookup_value="Unique Name", lookup_column="name")
+
+    # Assert
+    assert retrieved_instance.name == "Unique Name", "The retrieved instance should match the name 'Unique Name'."
+    print(f"Successfully retrieved instance with name: {retrieved_instance.name}")
+
+
+@pytest.mark.asyncio
+async def test_get_nonexistent_instance(orm_service):
+    # Act
+    retrieved_instance = await orm_service.get(ModelForTestingOne, lookup_value=9999, lookup_column="id")  # ID that doesn't exist
+
+    # Assert
+    assert retrieved_instance is None, "The result should be None if the instance doesn't exist."
+    print("Successfully handled retrieval of non-existent data.")
+
+
+@pytest.mark.asyncio
+async def test_update_by_primary_key(orm_service):
+    # Create an instance for testing
     instance = await orm_service.create(ModelForTestingOne, name="Old Name")
-    updated_instance = await orm_service.update(ModelForTestingOne, instance.id, name="Updated Name")
+
+    # Update the instance with a new name
+    updated_instance = await orm_service.update(
+        ModelForTestingOne,
+        lookup_value=instance.id,
+        name="Updated Name",
+        return_instance=True  # Request the updated instance
+    )
+
+    # Assert that the instance name was updated correctly
     assert updated_instance.name == "Updated Name", "The instance name should be updated to 'Updated Name'."
+
+
+@pytest.mark.asyncio
+async def test_update_by_column(orm_service):
+    instance = await orm_service.create(ModelForTestingOne, name="Old Name")
+
+    updated_instance = await orm_service.update(
+        ModelForTestingOne,
+        lookup_value="Old Name",
+        lookup_column="name",
+        name="New Name",
+        return_instance=True
+    )
+
+    assert updated_instance is not None, "The instance should have been found and updated."
+    assert updated_instance.name == "New Name", "The instance name should be updated to 'New Name'."
 
 
 @pytest.mark.asyncio
@@ -99,7 +151,7 @@ async def test_delete_by_column_sqlalchemy(orm_service):
     await orm_service.create(ModelForTestingOne, name="Test Instance 2")
 
     # Step 2: Delete by column 'name'
-    await orm_service.delete(ModelForTestingOne, name="Test Instance 1")
+    await orm_service.delete(ModelForTestingOne, lookup_column='name', lookup_value="Test Instance 1")
 
     # Step 3: Verify the instance was deleted
     remaining_instances = await orm_service.all(ModelForTestingOne)

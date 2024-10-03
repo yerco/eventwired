@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book List</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="container">
+  <!-- Navigation Links -->
+  <div class="navigation-links">
+    <a href="/">Home</a> |
+    <a href="/login">Login</a> |
+    <a href="/register">Register</a> |
+    <a href="/hello">Hello</a> |
+    <a href="/books/action/add">Add New Book</a>
+  </div>
+
+  <h1>Book List</h1>
+  <div class="book-list">
+    {% for book in books %}
+    <div class="book-card">
+      <div class="book-details">
+        <h2 class="book-title">{{ book.title }}</h2>
+        <p><strong>Author:</strong> {{ book.author }}</p>
+        <p><strong>Published Date:</strong> {{ book.published_date }}</p>
+        <p><strong>ISBN:</strong> {{ book.isbn }}</p>
+        <p><strong>Stock Quantity:</strong> {{ book.stock_quantity }}</p>
+      </div>
+      <div class="book-actions">
+        <a href="/books/{{ book.title }}/edit" class="btn edit-btn">Edit</a>
+        <form method="POST" action="/books/{{ book.title }}/delete" class="inline-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="_method" value="DELETE">
+          <button type="submit" class="btn delete-btn">Delete</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+</body>
+</html>

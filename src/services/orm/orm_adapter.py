@@ -8,15 +8,11 @@ class ORMAdapter(ABC):
         pass
 
     @abstractmethod
-    async def get(self, model: Any, identifier: Any) -> Any:
+    async def get(self, model: Any, lookup_value: Any, column: str = None) -> Any:
         pass
 
     @abstractmethod
-    async def get_by_column(self, model: Any, column: str, value: Any) -> Any:
-        pass
-
-    @abstractmethod
-    async def update(self, model: Any, identifier: Any, **data) -> Any:
+    async def update(self, model: Any, identifier: Any, identifier_column: Any, **data) -> Any:
         pass
 
     @abstractmethod

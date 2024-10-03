@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Details - {{ book.title }}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="container">
+  <!-- Navigation Links -->
+  <div class="navigation-links">
+    <a href="/books">Back to Book List</a> |
+    <a href="/books/add">Add New Book</a>
+  </div>
+
+  <h1>{{ book.title }}</h1>
+  <div class="book-details">
+    <p><strong>Author:</strong> {{ book.author }}</p>
+    <p><strong>Published Date:</strong> {{ book.published_date }}</p>
+    <p><strong>ISBN:</strong> {{ book.isbn }}</p>
+    <p><strong>Stock Quantity:</strong> {{ book.stock_quantity }}</p>
+  </div>
+
+  <!-- Link to edit the book -->
+  <div class="actions">
+    <a href="/books/{{ book.title }}/edit" class="btn-primary">Edit Book</a>
+  </div>
+</div>
+</body>
+</html>

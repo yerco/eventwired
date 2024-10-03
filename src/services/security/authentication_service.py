@@ -1,3 +1,5 @@
+import uuid
+from datetime import datetime, timedelta
 from typing import TypeVar, Type
 
 from src.event_bus import Event
@@ -18,7 +20,8 @@ class AuthenticationService:
         self.template_service = TemplateService(config_service=config_service)
 
     async def authenticate_user(self, User: Type[T], username: str, plain_password: str) -> T:
-        user = await self.orm_service.get_by_column(User, column="username", value=username)
+        # Fetch user by specifying the column "username"
+        user = await self.orm_service.get(User, lookup_value=username, lookup_column="username")
         if user and self.password_service.check_password(plain_password, user.password):
             return user
         return None
@@ -32,18 +35,14 @@ class AuthenticationService:
                 rendered_content = self.template_service.render_template('unauthorized.html', context)
                 # Create the response object
                 response = Response(content=rendered_content, status_code=401, content_type='text/html')
-                # Cache-Control
+
+                # Add security-related headers to the response
                 response.headers.append((b'Cache-Control', b'no-store, no-cache, must-revalidate, max-age=0'))
-                # CSP
                 response.headers.append((b'Content-Security-Policy', b"default-src 'self'"))
-                # Strict-Transport-Security (HSTS): Enforce the use of HTTPS for future requests
-                #response.headers.append((b'Strict-Transport-Security', b'max-age=63072000; includeSubDomains; preload'))
-                # X-Content-Type-Options: Prevent the browser from trying to interpret files as a different MIME type than specified.
                 response.headers.append((b'X-Content-Type-Options', b'nosniff'))
-                # X-Frame-Options: Protect against clickjacking by preventing the page from being displayed in an iframe.
                 response.headers.append((b'X-Frame-Options', b'DENY'))
 
-                # Send the response using the response's send method
+                # Send the response
                 await response.send(send)
         except Exception:  # TemplateNotFoundError:
             # Fallback to a default template if 'unauthorized.html' is not found

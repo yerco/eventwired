@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Book</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="form-container">
+  <!-- Navigation Links -->
+  <div class="navigation-links">
+    <a href="/">Home</a> |
+    <a href="/login">Login</a> |
+    <a href="/register">Register</a> |
+    <a href="/hello">Hello</a> |
+    <a href="/books">Books</a>
+  </div>
+
+  <h1>Add Book</h1>
+
+  <!-- Display General Errors -->
+  {% if errors.general %}
+  <div class="error-messages">
+    {% for error in errors.general %}
+    <p class="error">{{ error }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Book Add Form -->
+  <form method="POST" action="/books/action/add" class="book-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    <!-- Title Field -->
+    <div class="form-group">
+      <label for="title">Title</label>
+      <input type="text" id="title" name="title" placeholder="Enter book title" value="{{ form.fields['title'].value or '' }}" class="form-control">
+      <!-- Display Error for Title -->
+      {% if errors.title %}
+      <p class="error">{{ errors.title }}</p>
+      {% endif %}
+    </div>
+
+    <!-- Author Field -->
+    <div class="form-group">
+      <label for="author">Author</label>
+      <input type="text" id="author" name="author" placeholder="Enter author's name" value="{{ form.fields['author'].value or '' }}" class="form-control">
+      <!-- Display Error for Author -->
+      {% if errors.author %}
+      <p class="error">{{ errors.author }}</p>
+      {% endif %}
+    </div>
+
+    <!-- Published Date Field -->
+    <div class="form-group">
+      <label for="published_date">Published Date</label>
+      <input type="date" id="published_date" name="published_date" value="{{ form.fields['published_date'].value or '' }}" class="form-control">
+      <!-- Display Error for Published Date -->
+      {% if errors.published_date %}
+      <p class="error">{{ errors.published_date }}</p>
+      {% endif %}
+    </div>
+
+    <!-- ISBN Field -->
+    <div class="form-group">
+      <label for="isbn">ISBN</label>
+      <input type="text" id="isbn" name="isbn" placeholder="Enter ISBN" value="{{ form.fields['isbn'].value or '' }}" class="form-control">
+      <!-- Display Error for ISBN -->
+      {% if errors.isbn %}
+      <p class="error">{{ errors.isbn }}</p>
+      {% endif %}
+    </div>
+
+    <!-- Stock Quantity Field -->
+    <div class="form-group">
+      <label for="stock_quantity">Stock Quantity</label>
+      <input type="number" id="stock_quantity" name="stock_quantity" placeholder="Enter stock quantity" value="{{ form.fields['stock_quantity'].value or '' }}" class="form-control">
+      <!-- Display Error for Stock Quantity -->
+      {% if errors.stock_quantity %}
+      <p class="error">{{ errors.stock_quantity }}</p>
+      {% endif %}
+    </div>
+
+    <!-- Submit Button -->
+    <div class="form-group">
+      <button type="submit" class="btn-primary">Add Book</button>
+    </div>
+  </form>
+</div>
+</body>
+</html>

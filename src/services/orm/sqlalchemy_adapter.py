@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from sqlalchemy.sql import select
+from sqlalchemy.sql import select, delete as sqlalchemy_delete, update as sqlalchemy_update
 from sqlalchemy import inspect
 from typing import Any, Type, List
 
@@ -42,75 +42,88 @@ class SQLAlchemyAdapter(ORMAdapter):
                 print(f"SQLAlchemyError during 'create': {e}")
                 raise
 
-    async def get(self, model: Type[Any], identifier: Any) -> Any:
+    async def get(self, model: Type[Any], lookup_value: Any, lookup_column: str = None) -> Any:
         async with self.Session() as session:
             try:
-                # Dynamically get the primary key column
-                primary_key_column = inspect(model).primary_key[0].name
-                # Query based on the primary key column
-                stmt = select(model).where(getattr(model, primary_key_column) == identifier)
+                # Default to the primary key if no column is provided
+                if lookup_column is None:
+                    lookup_column = inspect(model).primary_key[0].name
+
+                stmt = select(model).where(getattr(model, lookup_column) == lookup_value)
                 result = await session.execute(stmt)
                 return result.scalars().one_or_none()
             except SQLAlchemyError as e:
                 print(f"SQLAlchemyError during 'get': {e}")
                 raise
 
-    async def get_by_column(self, model: Type[Any], column: str, value: Any) -> Any:
-        async with self.Session() as session:
-            try:
-                stmt = select(model).where(getattr(model, column) == value)
-                result = await session.execute(stmt)
-                return result.scalars().one_or_none()
-            except SQLAlchemyError as e:
-                print(f"SQLAlchemyError during 'get_by_column': {e}")
-                raise
-
-    async def update(self, model: Type[Any], identifier: Any, **data: Any) -> Any:
+    async def update(self, model: Type[Any], lookup_value: Any, lookup_column: str = "id", return_instance: bool = False, **data: Any) -> Any:
         if not data:
             return None
+
         async with self.Session() as session:
             try:
-                instance = await self.get(model, identifier)
-                if instance:
-                    for key, value in data.items():
-                        setattr(instance, key, value)
-                    await session.commit()
-                return instance
+                # Update the record with the provided data and return the updated instance
+                stmt = (
+                    sqlalchemy_update(model)
+                    .where(getattr(model, lookup_column) == lookup_value)
+                    .values(**data)
+                    .returning(*model.__table__.columns)  # Use RETURNING to get the updated row
+                    .execution_options(synchronize_session="fetch")
+                )
+                result = await session.execute(stmt)
+                await session.commit()
+
+                # If return_instance is requested, extract the updated instance
+                updated_instance_row = result.fetchone()
+                if updated_instance_row:
+                    updated_instance = model(**updated_instance_row._asdict())
+                    return updated_instance if return_instance else True
+
+                return False  # No rows were updated
             except SQLAlchemyError as e:
                 await session.rollback()
                 print(f"SQLAlchemyError during 'update': {e}")
                 raise
 
-    async def delete(self, model: Type[Any], identifier: Any) -> bool:
+    # Delete by primary key value
+    async def delete(self, model: Type[Any], lookup_value: Any) -> bool:
         async with self.Session() as session:
             try:
-                instance = await self.get(model, identifier)
-                if instance:
-                    await session.delete(instance)
-                    await session.commit()
-                    return True
-                return False
+                # Dynamically retrieve the primary key column name for the given model
+                primary_key_column = inspect(model).primary_key[0].name
+
+                # Create the DELETE statement based on the primary key column
+                stmt = (
+                    sqlalchemy_delete(model)
+                    .where(getattr(model, primary_key_column) == lookup_value)
+                    .returning(getattr(model, primary_key_column))  # Return the primary key column value instead of assuming it's "id"
+                )
+                result = await session.execute(stmt)
+                await session.commit()
+
+                deleted_row = result.fetchone()
+                return deleted_row is not None  # Return True if a row was deleted, otherwise False
             except SQLAlchemyError as e:
                 await session.rollback()
                 print(f"SQLAlchemyError during 'delete': {e}")
                 raise
 
+    # Delete by any specific column value
     async def delete_by_column(self, model: Type[Any], column_name: str, value: Any) -> bool:
         async with self.Session() as session:
             try:
-                # Query for the rows matching the condition (column_name == value)
-                query = await session.execute(
-                    select(model).filter(getattr(model, column_name) == value)
+                # Get the actual primary key column name of the model
+                primary_key_column = inspect(model).primary_key[0].name
+                stmt = (
+                    sqlalchemy_delete(model)
+                    .where(getattr(model, column_name) == value)
+                    .returning(getattr(model, primary_key_column))
                 )
-                instances = query.scalars().all()
+                result = await session.execute(stmt)
+                await session.commit()
 
-                # If instances are found, delete them
-                if instances:
-                    for instance in instances:
-                        await session.delete(instance)
-                    await session.commit()
-                    return True
-                return False
+                deleted_row = result.fetchone()
+                return deleted_row is not None  # Return True if a row was deleted, otherwise False
             except SQLAlchemyError as e:
                 await session.rollback()
                 print(f"SQLAlchemyError during 'delete_by_column': {e}")

@@ -1,18 +1,13 @@
 import pytest
-import os
 from unittest.mock import AsyncMock, Mock, ANY
 
-from src.config import config_service
 from src.core.response import Response
-from src.distributor import config
 from src.event_bus import Event
 from src.controllers.http_controller import HTTPController
 
 from demo_app.controllers.login_controller import login_controller
 from demo_app.di_setup import di_container
 from demo_app.models.user import User
-from demo_app.services.config_service import AppConfigService
-from src.services.template_service import TemplateService
 
 
 @pytest.mark.asyncio

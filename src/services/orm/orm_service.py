@@ -28,29 +28,22 @@ class ORMService:
     async def create(self, model: Any, **data: Any) -> Any:
         return await self.orm_adapter.create(model, **data)
 
-    async def get(self, model: Any, identifier: Any) -> Any:
-        return await self.orm_adapter.get(model, identifier)
+    # Get operation by primary key or any specified column
+    async def get(self, model: Any, lookup_value: Any, lookup_column: str = None) -> Any:
+        return await self.orm_adapter.get(model, lookup_value, lookup_column=lookup_column)
 
-    async def get_by_column(self, model: Any, column: str, value: Any):
-        return await self.orm_adapter.get_by_column(model, column, value)
+    # Update an instance by a specified column, defaulting to primary key
+    async def update(self, model: Any, lookup_value: Any, lookup_column: str = "id", return_instance: bool = False, **data: Any) -> Any:
+        return await self.orm_adapter.update(model, lookup_value, lookup_column, return_instance=return_instance, **data)
 
-    async def update(self, model: Any, identifier: Any, **data: Any) -> Any:
-        return await self.orm_adapter.update(model, identifier, **data)
-
-    async def delete(self, model: Any, identifier: Any = None, **column) -> None:
-        if identifier:
-            # Delete by identifier
-            return await self.orm_adapter.delete(model, identifier)
-        elif column:
-            # Ensure only one column/value pair is provided
-            if len(column) != 1:
-                raise ValueError("Exactly one column must be provided for deletion by column.")
-
-            # Extract the column name and value from the keyword arguments
-            column_name, value = next(iter(column.items()))
-            return await self.orm_adapter.delete_by_column(model, column_name, value)
+    # Delete operation, either by primary key or a specific column
+    async def delete(self, model: Any, lookup_value: Any = None, lookup_column: str = None) -> None:
+        if lookup_column is None:
+            # If no lookup column is provided, use primary key
+            return await self.orm_adapter.delete(model, lookup_value)
         else:
-            raise ValueError("Either identifier or a column-value pair must be provided for deletion.")
+            # Delete by specific column
+            return await self.orm_adapter.delete_by_column(model, lookup_column, lookup_value)
 
     async def all(self, model: Any) -> list[Any]:
         return await self.orm_adapter.all(model)

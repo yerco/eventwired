@@ -15,10 +15,6 @@ class StaticFilesHandler:
         filename = request.path[len(self.static_url_path):].lstrip("/")
         file_path = os.path.join(self.static_dir, filename)
 
-        # Debugging: print the constructed file_path to verify correctness
-        # This is for development/debugging purposes
-        print(f"StaticFilesHandler: Looking for file at {file_path}")
-
         # Check if file exists and is a valid file
         if not os.path.isfile(file_path):
             await send({
