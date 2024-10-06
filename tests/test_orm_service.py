@@ -1,5 +1,4 @@
 import os
-from mailcap import lookup
 
 import pytest
 from sqlalchemy import Column, Integer, String
@@ -44,8 +43,8 @@ async def orm_service():
 async def reset_db(orm_service):
     # Reset the database before each test (clean slate)
     print("Resetting DB for the test")
-    if orm_service.orm_adapter.engine is not None:
-        async with orm_service.orm_adapter.engine.begin() as conn:
+    if orm_service.engine is not None:
+        async with orm_service.engine.begin() as conn:
             await conn.run_sync(Base.metadata.drop_all)
             await conn.run_sync(Base.metadata.create_all)  # Recreate tables
         Base.metadata.clear()
@@ -54,7 +53,7 @@ async def reset_db(orm_service):
 @pytest.mark.asyncio
 async def test_orm_service_initialization(orm_service):
     assert orm_service is not None, "ORMService should be initialized."
-    assert isinstance(orm_service.orm_adapter.engine, AsyncEngine), "ORMService engine should be an AsyncEngine."
+    assert isinstance(orm_service.engine, AsyncEngine), "ORMService engine should be an AsyncEngine."
     assert os.path.exists('a_default.db'), "Database file should be created after table creation."
 
 
@@ -179,10 +178,10 @@ async def test_all_sqlalchemy(orm_service):
 
 @pytest.mark.asyncio
 async def test_cleanup_sqlalchemy(orm_service):
-    assert orm_service.orm_adapter.engine is not None, "The engine should be present."
+    assert orm_service.engine is not None, "The engine should be present."
     await orm_service.cleanup()
     try:
-        async with orm_service.orm_adapter.engine.connect() as conn:
+        async with orm_service.engine.connect() as conn:
             assert conn is not None, "Connection should still be possible after engine disposal."
     except Exception as e:
         pytest.fail(f"Engine raised an unexpected error after disposal: {e}")
