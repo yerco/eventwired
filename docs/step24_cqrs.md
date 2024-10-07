@@ -159,3 +159,48 @@ To create a new record in the database:
      ```python
      books = await orm_service.all(Book)
      ```
+
+## Implementing CQRS with Redis
+
+As this is an effort for educational purposes we implemented the Command Query Responsibility Segregation (CQRS) pattern. 
+The implementation involved splitting the write (commands) and read (queries) operations,
+leveraging Redis to optimize reads, while still supporting fallback to our traditional ORM when Redis is not available.
+
+## Using Redis for CQRS
+
+For the query side, we opted to use Redis to enhance read performance. Redis is a great fit due to its low 
+latency and ability to quickly handle large amounts of read requests, especially compared to traditional databases.
+We utilized the `BookReadModel` class to handle read-related operations by storing data in Redis.
+
+If Redis is not available (either because it isn't configured or it cannot connect), our implementation falls
+back to using the ORM service for reads. This ensures that the system remains functional even if Redis is
+offline or unavailable. We provided the `RedisService` class with a `critical` parameter, allowing us to
+decide whether the absence of Redis should be a fatal error or gracefully handled with a fallback.
+
+## Simplification and Event Sourcing
+
+Although CQRS often goes hand-in-hand with Event Sourcing, we decided to simplify our implementation for now
+by directly updating the read model after a command is executed. In a full event-driven system, 
+commands would emit events (e.g., `BookCreatedEvent`), and these events would be processed by separate services
+(projections) to update read models. By avoiding this complexity, our implementation is easier to understand
+and maintain, while still demonstrating the core concept of CQRS.
+
+This approach also means that we are not maintaining a complete history of changes (as we would with Event Sourcing).
+Instead, the read model is simply kept in sync after each command. While this is sufficient for many use cases,
+adopting Event Sourcing in the future would add capabilities such as reconstructing historical state and 
+auditing all changes over time.
+
+## Fallback to ORM for Queries
+
+To ensure reliability and continuity, we included a fallback mechanism to the ORM for all queries when Redis 
+is not available. This fallback mechanism allows the application to continue functioning without Redis, 
+albeit with a potential performance cost. This strategy is particularly useful for development environments, 
+or situations where Redis might be temporarily unavailable. It is also a good illustration of a resilient CQRS 
+implementation, which can adapt to varying infrastructure conditions.
+
+## Summary
+
+- **CQRS Implementation**: Commands and queries were separated, with Redis used for the read model to enhance performance.
+- **Event Sourcing Simplification**: We directly update the read model after commands, avoiding the complexity of
+  event-driven projections for now.
+- **Redis Fallback**: When Redis is unavailable, the system gracefully falls back to the traditional ORM for read operations.

@@ -14,3 +14,4 @@ class AppConfigService(BaseConfigService):
         self.set('TEMPLATE_DIR', os.path.join(base_dir, '../templates'))
         self.set('TEMPLATE_ENGINE', 'JinjaAdapter')
         self.set('SESSION_EXPIRY_SECONDS', 3600)  # Default: 1 hour
+        self.set('USE_REDIS_FOR_CQRS', True)

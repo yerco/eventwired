@@ -12,6 +12,7 @@ from src.services.middleware_service import MiddlewareService
 from src.services.session_service import SessionService
 from src.services.publisher_service import PublisherService
 from src.services.websocket_service import WebSocketService
+from src.services.factories import create_redis_service
 
 from src.middleware.timing_middleware import TimingMiddleware
 from src.middleware.csrf_middleware import CSRFMiddleware
@@ -23,6 +24,13 @@ from demo_app.subscriber_setup import register_subscribers
 # Register services in the DI container
 config_service = AppConfigService()
 di_container.register_singleton(config_service, 'ConfigService')
+
+# Just for the CQRS example at /books
+redis_service = None
+if config_service.get('USE_REDIS_FOR_CQRS'):
+    redis_service = create_redis_service(critical=False)
+    if redis_service:
+        di_container.register_singleton(redis_service, 'RedisService')
 
 di_container.register_transient(TemplateService, 'TemplateService')
 di_container.register_transient(FormService, 'FormService')

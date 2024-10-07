@@ -14,9 +14,14 @@ async def queries_books_controller(event: Event):
     form_service = await di_container.get('FormService')
     template_service = await di_container.get('TemplateService')
     orm_service = await di_container.get('ORMService')
+    try:
+        redis_service = await di_container.get('RedisService')
+    except Exception as e:
+        print("Note: you are not using REDIS")
+        redis_service = None
 
     # Instantiate Command and Query Handlers
-    query_handler = BookQueryHandler(orm_service=orm_service)
+    query_handler = BookQueryHandler(orm_service=orm_service, redis_service=redis_service)
     controller = HTTPController(event, template_service)
 
     request = event.data['request']
@@ -80,17 +85,31 @@ async def queries_books_controller(event: Event):
             if not book:
                 await controller.send_error(404, "Book not found")
             else:
-                form = await form_service.create_form(BookForm, data={
-                    "title": book.title,
-                    "author": book.author,
-                    "published_date": str(book.published_date) if book.published_date else "",
-                    "isbn": book.isbn,
-                    "stock_quantity": book.stock_quantity,
-                })
-                context = {
+                # Handle case where the book is a dictionary (from Redis) or an object (from ORM)
+                if isinstance(book, dict):
+                    book_data = {
+                        "title": book.get("title"),
+                        "author": book.get("author"),
+                        "published_date": book.get("published_date") if book.get("published_date") else "",
+                        "isbn": book.get("isbn"),
+                        "stock_quantity": book.get("stock_quantity"),
+                    }
+                else:
+                    book_data = {
+                        "title": book.title,
+                        "author": book.author,
+                        "published_date": str(book.published_date) if book.published_date else "",
+                        "isbn": book.isbn,
+                        "stock_quantity": book.stock_quantity,
+                    }
+
+                # Create form using book data
+                form = await form_service.create_form(BookForm, data=book_data)
+
+                # Render the form with the book data
+                rendered_content = template_service.render_template('book_edit.html', {
                     "form": form,
                     "errors": {},
                     "csrf_token": event.data.get('csrf_token')
-                }
-                rendered_content = template_service.render_template('book_edit.html', context)
+                })
                 await controller.send_html(rendered_content)
