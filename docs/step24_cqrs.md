@@ -166,6 +166,11 @@ As this is an effort for educational purposes we implemented the Command Query R
 The implementation involved splitting the write (commands) and read (queries) operations,
 leveraging Redis to optimize reads, while still supporting fallback to our traditional ORM when Redis is not available.
 
+Important:
+- To test the Redis implementation, you can start a Redis server locally or use a cloud-based Redis service. 
+- Ensure that the flag `USE_REDIS_FOR_CQRS` is set to True at `demo_app/services/config_service.py`.
+
+
 ## Using Redis for CQRS
 
 For the query side, we opted to use Redis to enhance read performance. Redis is a great fit due to its low 

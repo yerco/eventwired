@@ -185,7 +185,7 @@ class BookCommandHandler:
             raise
         except Exception as e:
             # Handle unexpected errors
-            print(f"Unexpected error while deleting book: {str(e)}")
+            # print(f"Unexpected error while deleting book: {str(e)}")
             raise Exception("An unexpected error occurred while deleting the book. Please try again later.")
 
 
