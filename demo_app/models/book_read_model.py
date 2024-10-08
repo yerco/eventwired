@@ -27,6 +27,11 @@ class BookReadModel:
         # Ensure values are strings
         converted_data = {k: str(v) for k, v in filtered_data.items()}
 
+        new_title = converted_data.get("title", title)
+        if new_title != title:
+            # Delete the old book record in Redis if the title has changed
+            old_key = f"book:{title}"
+            await self.redis_service.client.delete(old_key)
         key = f"book:{title}"
         try:
             await self.redis_service.set_session(key, converted_data)

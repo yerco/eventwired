@@ -126,7 +126,7 @@ class BookCommandHandler:
             # service that listens for the event and updates the read model accordingly.
             if self.book_read_model:
                 await self.book_read_model.update_book(
-                    title=new_title,
+                    title=title,
                     updated_data={
                         "id": str(updated_book.id),
                         "title": new_title,
