@@ -32,11 +32,11 @@ class BookReadModel:
             # Delete the old book record in Redis if the title has changed
             old_key = f"book:{title}"
             await self.redis_service.client.delete(old_key)
-        key = f"book:{title}"
+        new_key = f"book:{new_title}"
         try:
-            await self.redis_service.set_session(key, converted_data)
+            await self.redis_service.set_session(new_key, converted_data)
         except Exception as e:
-            print(f"Error updating session for key '{key}': {e}")
+            print(f"Error updating session for key '{new_key}': {e}")
 
     async def delete_book(self, title: str) -> None:
         key = f"book:{title}"
