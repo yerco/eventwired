@@ -82,7 +82,7 @@ Below is a quick reference guide for developers on how to use the `OrmService` w
 To initialize `OrmService`, you need to set up the database configuration:
 
 ```python
-from src.services.orm.orm_service import ORMService
+from src.services.orm_service import ORMService
 from src.services.config_service import ConfigService
 
 config_service = ConfigService()

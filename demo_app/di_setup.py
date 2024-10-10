@@ -2,7 +2,7 @@ from src.dicontainer import di_container
 from src.event_bus import EventBus
 
 from src.models.base import Base
-from src.services.orm.orm_service import ORMService
+from src.services.orm_service import ORMService
 from src.services.form_service import FormService
 from src.services.routing_service import RoutingService
 from src.services.template_service import TemplateService

@@ -2,7 +2,7 @@ import os
 import pytest
 from datetime import date
 
-from src.services.orm.orm_service import ORMService
+from src.services.orm_service import ORMService
 from src.services.config_service import ConfigService
 from src.models.base import Base
 

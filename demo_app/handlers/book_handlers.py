@@ -1,7 +1,7 @@
 # CQRS
 from typing import Optional
 
-from src.services.orm.orm_service import ORMService
+from src.services.orm_service import ORMService
 
 from demo_app.models.book import Book
 from demo_app.di_setup import di_container

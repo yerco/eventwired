@@ -1,7 +1,7 @@
 import datetime
 import json
 
-from src.services.orm.orm_service import ORMService
+from src.services.orm_service import ORMService
 from src.models.session import Session as SessionModel
 from src.services.config_service import ConfigService
 

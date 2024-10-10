@@ -1,11 +1,11 @@
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 from datetime import date
 
 from demo_app.handlers.book_handlers import BookCommandHandler
 from demo_app.models.book import Book
 
-from src.services.orm.orm_service import ORMService
+from src.services.orm_service import ORMService
 from src.services.redis_service import RedisService
 
 # Fixtures for mocks

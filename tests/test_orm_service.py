@@ -5,7 +5,7 @@ from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.orm import declarative_base
 from src.services.config_service import ConfigService
-from src.services.orm.orm_service import ORMService
+from src.services.orm_service import ORMService
 
 Base = declarative_base()
 

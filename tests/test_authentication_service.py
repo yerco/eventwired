@@ -1,10 +1,10 @@
 import pytest
 import re
 
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock
 from src.event_bus import Event
 from src.services.config_service import ConfigService
-from src.services.orm.orm_service import ORMService
+from src.services.orm_service import ORMService
 from src.services.security.authentication_service import AuthenticationService
 from sqlalchemy.orm import declarative_base
 from sqlalchemy import MetaData, Column, Integer, String
