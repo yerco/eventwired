@@ -109,6 +109,10 @@ async def test_add_book_invalid_published_date(command_handler_with_redis):
 # Tests for `update_book`
 @pytest.mark.asyncio
 async def test_update_book_success_with_redis(command_handler_with_redis, orm_service_mock, redis_service_mock):
+    # Mock the client attribute of redis_service_mock
+    redis_client_mock = AsyncMock()
+    redis_service_mock.client = redis_client_mock  # Mock the client
+
     orm_service_mock.update.return_value = Book(
         id=1,
         title="Updated Book",
@@ -128,7 +132,16 @@ async def test_update_book_success_with_redis(command_handler_with_redis, orm_se
     )
 
     assert result is True
-    assert redis_service_mock.set_session.called
+    # Check if Redis client delete and set_session are called
+    redis_service_mock.client.delete.assert_called_once_with("book:Test Book")
+    redis_service_mock.set_session.assert_called_once_with("book:Updated Book", {
+        'id': '1',
+        'title': 'Updated Book',
+        'author': 'Updated Author',
+        'published_date': '2024-01-01',
+        'isbn': '1234567890',
+        'stock_quantity': '15'
+    })
 
 
 @pytest.mark.asyncio
@@ -173,6 +186,3 @@ async def test_delete_book_not_found(command_handler_with_redis, orm_service_moc
 async def test_delete_book_validation_error(command_handler_with_redis):
     with pytest.raises(ValueError, match="At least one of 'title' or 'author' must be provided to delete a book."):
         await command_handler_with_redis.delete_book()
-
-
-# READ section

@@ -5,19 +5,26 @@ from typing import Any, Dict
 
 
 class ConfigService:
-    def __init__(self, config: Dict[str, Any] = None):
-        self._config: Dict[str, Any] = config or {}
+    def __init__(self, user_config: Dict[str, Any] = None):
+        self._config: Dict[str, Any] = {}
         self._load_default_config()
+        if user_config:
+            self._load_user_config(user_config)
 
     def _load_default_config(self):
         self._config.update({
             'SECRET_KEY': os.getenv('SECRET_KEY', 'default_secret'),
             'PRUNE_INTERVAL': timedelta(minutes=5),
-            'DATABASE_URL': os.getenv('DATABASE_URL', 'sqlite+aiosqlite:///demo_app.db'),
+            'DATABASE_URL': os.getenv('DATABASE_URL', 'sqlite+aiosqlite:///yasgi.db'),
             'TEMPLATE_DIR': 'src/templates',
             'ORM_ENGINE': 'SQLAlchemy',
             'DB_SESSION': None,
+            'SESSION_EXPIRY_SECONDS': 3600,  # Default session expiry
+            'USE_REDIS_FOR_CQRS': False,
         })
+
+    def _load_user_config(self, user_config: Dict[str, Any]):
+        self._config.update(user_config)
 
     def load_app_config(self, app_config: Dict[str, Any]):
         self._config.update(app_config)

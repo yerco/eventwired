@@ -1,6 +1,12 @@
 import os
+base_dir = os.path.dirname(os.path.abspath(__file__))
 
-APP_CONFIG = {
-    'BASE_DIR': os.path.dirname(os.path.abspath(__file__)),
-    'TEMPLATE_DIR': os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates'),
+config = {
+    'BASE_DIR': base_dir,
+    'SECRET_KEY': 'supersecretkey',
+    'DATABASE_URL': 'sqlite+aiosqlite:///demo_app.db',
+    'USE_REDIS_FOR_CQRS': True,
+    'SESSION_EXPIRY_SECONDS': 7200,  # Extend session expiry to 2 hours
+    'TEMPLATE_ENGINE': 'JinjaAdapter',
+    'TEMPLATE_DIR': os.path.join(base_dir, 'templates'),
 }

@@ -3,12 +3,11 @@ import json
 
 from src.services.orm.orm_service import ORMService
 from src.models.session import Session as SessionModel
-
-from demo_app.services.config_service import AppConfigService
+from src.services.config_service import ConfigService
 
 
 class SessionService:
-    def __init__(self, orm_service: ORMService, config_service: AppConfigService):
+    def __init__(self, orm_service: ORMService, config_service: ConfigService):
         self.orm_service = orm_service
         self.config_service = config_service
 

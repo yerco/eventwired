@@ -12,4 +12,4 @@ async def log_request_response(event: Event):
 
     # Log the completed request with response status and timestamp
     completion_time = datetime.datetime.now().isoformat()
-    print(f"[{completion_time}] Completed request for {request_path} with status {status_code}")
+    print(f"[{completion_time}] Completed request for {request_path}")

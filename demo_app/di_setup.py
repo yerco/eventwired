@@ -13,16 +13,17 @@ from src.services.session_service import SessionService
 from src.services.publisher_service import PublisherService
 from src.services.websocket_service import WebSocketService
 from src.services.factories import create_redis_service
+from src.services.config_service import ConfigService
 
 from src.middleware.timing_middleware import TimingMiddleware
 from src.middleware.csrf_middleware import CSRFMiddleware
 from src.middleware.session_middleware import SessionMiddleware
 
-from demo_app.services.config_service import AppConfigService
+from demo_app.config import config
 from demo_app.subscriber_setup import register_subscribers
 
 # Register services in the DI container
-config_service = AppConfigService()
+config_service = ConfigService(config)
 di_container.register_singleton(config_service, 'ConfigService')
 
 # Just for the CQRS example at /books
