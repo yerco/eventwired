@@ -66,6 +66,30 @@ class Request:
         return self.scope.get('client')
 
     @property
+    def client_ip(self):
+        client_info = self.scope.get('client')
+        if client_info:
+            return client_info[0]  # Client IP
+        return None
+
+    @property
+    def authorization(self):
+        return self.headers.get('authorization')
+
+    @property
+    def forwarded_for(self):
+        # X-Forwarded-For may contain multiple IP addresses in case of multiple proxies
+        return self.headers.get('x-forwarded-for')
+
+    @property
+    def real_ip(self):
+        # Prefer X-Forwarded-For if present
+        forwarded_for = self.headers.get('x-forwarded-for')
+        if forwarded_for:
+            return forwarded_for.split(',')[0].strip()  # The first IP in the list is the client's real IP
+        return self.client_ip  # Fallback to the direct client IP if no X-Forwarded-For header
+
+    @property
     def scheme(self):
         return self.scope.get('scheme', 'http')
 

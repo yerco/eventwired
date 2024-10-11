@@ -21,6 +21,7 @@ from src.middleware.session_middleware import SessionMiddleware
 
 from demo_app.config import config
 from demo_app.subscriber_setup import register_subscribers
+# from demo_app.middleware.ip_geolocation_middleware import IpGeolocationMiddleware
 
 # Register services in the DI container
 config_service = ConfigService(config)
@@ -65,10 +66,7 @@ middleware_service = MiddlewareService()
 middleware_service.register_middleware(SessionMiddleware(session_service), priority=10)
 csrf_middleware = CSRFMiddleware()
 middleware_service.register_middleware(csrf_middleware, priority=5)  # lower priority than session middleware
-# HTTPS redirect middleware experimental
-# https_redirect_middleware = HTTPSRedirectMiddleware(permanent=True)
-# middleware_service.register_middleware(https_redirect_middleware, priority=10)
 
-# middleware_service.register_middleware(LoggingMiddleware(), priority=0)
+# middleware_service.register_middleware(IpGeolocationMiddleware(), priority=0)
 middleware_service.register_middleware(TimingMiddleware(), priority=1)
 di_container.register_singleton(middleware_service, 'MiddlewareService')
