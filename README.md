@@ -1,6 +1,12 @@
+![YASGI Logo](yasgi200.png)
+
 # YASGI
 
 A lightweight, async-first web framework built with modern web development in mind. **This is work in progress** focused first on educational purposes.
+
+🔗 **[Live Demo](https://yasgi-frame.work)**
+
+---
 
 ## Tools of the trade
 - Python 3.11.8
@@ -12,13 +18,13 @@ A lightweight, async-first web framework built with modern web development in mi
     $ git clone https://github.com/yerco/yasgi.git
     ```
 
-2. Create a virtualenv and activate it (optional)
+2. Go to the cloned folder, create a virtualenv and activate it (optional)
    ```bash
    $ python -m venv venv
    
     $ source venv/bin/activate
    ```
-   Preferably do `$ source /full/path/to/venv/bin/activate)` I saw problems with uvicorn and pyenv
+   This avoids potential issues with `uvicorn` and pyenv.
 
 3. Install the required packages
    ```bash
@@ -35,8 +41,6 @@ A lightweight, async-first web framework built with modern web development in mi
    ```
    
    Visit the server at http://127.0.0.1:8000
-
-   Note: Daphne support is not yet implemented.
 
 ## Testing
    ```bash
