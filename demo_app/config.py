@@ -9,4 +9,7 @@ config = {
     'SESSION_EXPIRY_SECONDS': 7200,  # Extend session expiry to 2 hours
     'TEMPLATE_ENGINE': 'JinjaAdapter',
     'TEMPLATE_DIR': os.path.join(base_dir, 'templates'),
+    'JWT_SECRET_KEY': 'my_secret_key',
+    'JWT_ALGORITHM': 'HS256',
+    'JWT_EXPIRATION_SECONDS': 7200,  # 2 hours expiration time
 }
