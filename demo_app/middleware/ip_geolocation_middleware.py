@@ -22,11 +22,11 @@ class IpGeolocationMiddleware(BaseMiddleware):
     async def before_request(self, event: Event) -> Event:
         request = event.data['request']
         try:
-            geolocation_data = await self.get_ip_geolocation(request.client_ip)
+            geolocation_data = await self.get_ip_geolocation(request.real_ip)
             if geolocation_data:
                 logger.info(f"Geolocation data: {geolocation_data}")
             else:
-                logger.info(f"Could not retrieve geolocation data for {request.client_ip}")
+                logger.info(f"Could not retrieve geolocation data for {request.real_ip}")
         except Exception as e:
             logger.error(f"Geolocation lookup failed: {str(e)}")
             # Proceed without geolocation to avoid degrading the user experience
