@@ -1,9 +1,9 @@
-from demo_app.forms.register_form import RegisterForm
 from src.event_bus import Event
 from src.controllers.http_controller import HTTPController
 
 from demo_app.di_setup import di_container
 from demo_app.models.user import User
+from demo_app.forms.register_form import RegisterForm
 
 
 async def register_controller(event: Event):

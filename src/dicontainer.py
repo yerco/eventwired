@@ -12,11 +12,24 @@ class DIContainer:
     def __init__(self):
         self._services = {}
         self._singletons = {}
+        self._scoped_instances = {}
 
     # Reset the DI container state
     def reset(self):
         self._services.clear()
         self._singletons.clear()
+
+    # Register a scoped service (shared within the same scope, e.g., within a request)
+    def register_scope(self, class_type, scope, name=None):
+        name = name or class_type.__name__
+        if scope not in self._scoped_instances:
+            self._scoped_instances[scope] = {}
+        self._scoped_instances[scope][name] = class_type
+
+    async def get_scoped(self, name, scope):
+        if scope in self._scoped_instances and name in self._scoped_instances[scope]:
+            return await self._create_instance(self._scoped_instances[scope][name])
+        raise Exception(f"Scoped service {name} not found in scope {scope}")
 
     # Register a singleton object, multiple instances of the same class can be registered using different names
     def register_singleton(self, instance, name=None):

@@ -17,7 +17,7 @@ logger.addHandler(console_handler)
 
 class IpGeolocationMiddleware(BaseMiddleware):
     def __init__(self):
-        self.throttler = SimpleThrottler(rate_limit=10, period=60)  # 10 requests per 60 seconds
+        self.throttler = SimpleThrottler(rate_limit=100, period=15)  # 100 requests per 15 seconds
 
     async def before_request(self, event: Event) -> Event:
         request = event.data['request']
@@ -40,7 +40,7 @@ class IpGeolocationMiddleware(BaseMiddleware):
         url = f"https://ipinfo.io/{ip_address}/json"
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=5) as response:
+                async with session.get(url, timeout=2) as response:
                     logger.debug(f"Geolocation API status: {response.status}")
                     if response.status == 200:
                         json_data = await response.json()

@@ -12,7 +12,7 @@ from demo_app.middleware.ip_geolocation_middleware import IpGeolocationMiddlewar
 async def test_ip_geolocation_middleware_success(monkeypatch):
     # Mock event and request
     request_mock = AsyncMock()
-    request_mock.client_ip = "8.8.8.8"  # Mocking a valid IP
+    request_mock.real_ip = "8.8.8.8"  # Mocking a valid IP address
     event = Event(name="http.request.received", data={"request": request_mock})
 
     # Mock successful geolocation API response
@@ -27,14 +27,16 @@ async def test_ip_geolocation_middleware_success(monkeypatch):
         # Run before_request and assert the log call
         with patch('logging.Logger.info') as mock_logger_info:
             await middleware.before_request(event)
-            mock_logger_info.assert_any_call("Geolocation data: {'ip': '8.8.8.8', 'country': 'US', 'region': 'California', 'city': 'Mountain View'}")
+            mock_logger_info.assert_any_call(
+                "Geolocation data: {'ip': '8.8.8.8', 'country': 'US', 'region': 'California', 'city': 'Mountain View'}"
+            )
 
 
 @pytest.mark.asyncio
 async def test_ip_geolocation_middleware_fallback(monkeypatch):
     # Mock event and request
     request_mock = AsyncMock()
-    request_mock.client_ip = "8.8.8.8"
+    request_mock.real_ip = "8.8.8.8"
     event = Event(name="http.request.received", data={"request": request_mock})
 
     # Mock a failure on ipinfo.io and a successful fallback to geojs.io
@@ -86,7 +88,7 @@ async def test_ip_geolocation_middleware_throttling(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_throttler_behavior():
-    throttler = SimpleThrottler(rate_limit=2, period=5)  # 2 requests per 5 seconds
+    throttler = SimpleThrottler(rate_limit=2, period=3)  # 2 requests per 3 seconds
 
     start_time = time.time()
 
@@ -100,4 +102,4 @@ async def test_throttler_behavior():
     elapsed_time = time.time() - start_time
 
     # Ensure that the throttler made the third request wait
-    assert elapsed_time >= 5, "Throttler did not properly enforce the rate limit"
+    assert elapsed_time >= 3, "Throttler did not properly enforce the rate limit"

@@ -22,9 +22,10 @@ def jwt_service(config_service_mock):
 
 
 # Test case: Generating a token
-def test_generate_token(jwt_service):
+@pytest.mark.asyncio
+async def test_generate_token(jwt_service):
     payload = {"user_id": 123, "username": "test_user"}
-    token = jwt_service.generate_token(payload)
+    token = await jwt_service.generate_token(payload)
 
     # Ensure token is a non-empty string
     assert isinstance(token, str)
@@ -44,12 +45,13 @@ def test_generate_token(jwt_service):
 
 
 # Test case: Validating a valid token
-def test_validate_token(jwt_service):
+@pytest.mark.asyncio
+async def test_validate_token(jwt_service):
     payload = {"user_id": 123, "username": "test_user"}
-    token = jwt_service.generate_token(payload)
+    token = await jwt_service.generate_token(payload)
 
     # Ensure the token is validated and decoded correctly
-    decoded_payload = jwt_service.validate_token(token)
+    decoded_payload = await jwt_service.validate_token(token)
     assert decoded_payload["user_id"] == 123
     assert decoded_payload["username"] == "test_user"
     assert "iat" in decoded_payload
@@ -57,35 +59,38 @@ def test_validate_token(jwt_service):
 
 
 # Test case: Validating an expired token
-def test_validate_expired_token(jwt_service, monkeypatch):
+@pytest.mark.asyncio
+async def test_validate_expired_token(jwt_service, monkeypatch):
     payload = {"user_id": 123, "username": "test_user"}
 
     # Freeze time to 2 hours in the past
     past_time = datetime.now(timezone.utc) - timedelta(hours=2)
     with freeze_time(past_time):
-        token = jwt_service.generate_token(payload)
+        token = await jwt_service.generate_token(payload)
 
     # Now that the time is reset, validate the token (which should be expired)
     with pytest.raises(ValueError, match="Token has expired"):
-        jwt_service.validate_token(token)
+        await jwt_service.validate_token(token)
 
 
 # Test case: Validating an invalid token (manipulated or forged)
-def test_validate_invalid_token(jwt_service):
+@pytest.mark.asyncio
+async def test_validate_invalid_token(jwt_service):
     invalid_token = "this.is.an.invalid.token"
 
     # Ensure validation raises an error for invalid tokens
     with pytest.raises(ValueError, match="Invalid token"):
-        jwt_service.validate_token(invalid_token)
+        await jwt_service.validate_token(invalid_token)
 
 
 # Test case: Token with custom expiration
-def test_generate_token_custom_expiration(jwt_service, monkeypatch):
+@pytest.mark.asyncio
+async def test_generate_token_custom_expiration(jwt_service, monkeypatch):
     # Override expiration_seconds for this test
     jwt_service.expiration_seconds = 7200  # 2 hours
 
     payload = {"user_id": 123, "username": "test_user"}
-    token = jwt_service.generate_token(payload)
+    token = await jwt_service.generate_token(payload)
 
     # Decode the token to check the expiration time
     decoded_payload = jwt.decode(token, jwt_service.secret_key, algorithms=[jwt_service.algorithm])
@@ -105,12 +110,13 @@ def test_missing_secret_key_in_config(monkeypatch):
 
 
 # Test case: Using an invalid secret key for token validation
-def test_invalid_secret_key_for_validation(jwt_service):
+@pytest.mark.asyncio
+async def test_invalid_secret_key_for_validation(jwt_service):
     payload = {"user_id": 123, "username": "test_user"}
-    token = jwt_service.generate_token(payload)
+    token = await jwt_service.generate_token(payload)
 
     # Modify the secret key to simulate a validation failure
     jwt_service.secret_key = "wrong_secret_key"
 
     with pytest.raises(ValueError, match="Invalid token"):
-        jwt_service.validate_token(token)
+        await jwt_service.validate_token(token)

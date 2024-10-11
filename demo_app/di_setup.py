@@ -14,6 +14,7 @@ from src.services.publisher_service import PublisherService
 from src.services.websocket_service import WebSocketService
 from src.services.factories import create_redis_service
 from src.services.config_service import ConfigService
+from src.services.jwt_service import JWTService
 
 from src.middleware.timing_middleware import TimingMiddleware
 from src.middleware.csrf_middleware import CSRFMiddleware
@@ -48,12 +49,14 @@ di_container.register_singleton(orm_service, 'ORMService')
 di_container.register_transient(PasswordService, 'PasswordService')
 auth_service = AuthenticationService(orm_service=orm_service, config_service=config_service)
 di_container.register_singleton(auth_service, 'AuthenticationService')
+jwt_service = JWTService(config_service=config_service)
+di_container.register_singleton(jwt_service, 'JWTService')
 
 # Initialize the session service and register it
 session_service = SessionService(orm_service=orm_service, config_service=config_service)
 di_container.register_singleton(session_service, 'SessionService')
 
-routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
+routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
 di_container.register_singleton(routing_service, 'RoutingService')
 
 publisher_service = PublisherService(event_bus=event_bus)

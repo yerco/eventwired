@@ -9,6 +9,8 @@ from demo_app.controllers.render_chat_room_controller import render_chat_room_co
 from demo_app.controllers.chat_room_controller import chat_room_controller
 from demo_app.controllers.queries_books_controller import queries_books_controller
 from demo_app.controllers.commands_books_controller import commands_books_controller
+from demo_app.controllers.api_controllers import api_login_controller, api_protected_controller
+
 
 def register_routes(routing_service):
     routing_service.add_route('/', 'GET', welcome_controller)
@@ -29,4 +31,7 @@ def register_routes(routing_service):
     routing_service.add_route('/books/action/add', ['GET'], queries_books_controller)
     routing_service.add_route('/books/<str:title>', ['GET'], queries_books_controller)
     routing_service.add_route('/books/<str:title>/edit', ['GET'], queries_books_controller)  # just to show the form
+    # Example API JWT
+    routing_service.add_route('/api/login', ['POST'], api_login_controller)
+    routing_service.add_route('/api/protected', ['GET'], api_protected_controller, requires_jwt_auth=True)
 

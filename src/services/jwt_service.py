@@ -1,3 +1,5 @@
+import asyncio
+
 import jwt
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
@@ -13,7 +15,7 @@ class JWTService:
         self.expiration_seconds = config_service.get('JWT_EXPIRATION_SECONDS', 3600)  # Default 1 hour
 
     # Generates a JWT token with the given payload
-    def generate_token(self, payload: Dict[str, Any]) -> str:
+    async def generate_token(self, payload: Dict[str, Any]) -> str:
         # Use timezone-aware current time
         current_time = datetime.now(timezone.utc)
         expiration_time = current_time + timedelta(seconds=self.expiration_seconds)
@@ -25,14 +27,15 @@ class JWTService:
             "exp": expiration_time
         })
 
-        # Generate and return the JWT token
-        token = jwt.encode(payload_copy, self.secret_key, algorithm=self.algorithm)
+        # Generate the JWT token asynchronously to avoid blocking the event loop
+        token = await asyncio.to_thread(jwt.encode, payload_copy, self.secret_key, algorithm=self.algorithm)
         return token
 
     # Validates the given JWT token and returns the decoded payload
-    def validate_token(self, token: str) -> Dict[str, Any]:
+    async def validate_token(self, token: str) -> Dict[str, Any]:
         try:
-            decoded_payload = jwt.decode(token, self.secret_key, algorithms=[self.algorithm])
+            # Decode the JWT token asynchronously
+            decoded_payload = await asyncio.to_thread(jwt.decode, token, self.secret_key, algorithms=[self.algorithm])
             return decoded_payload
         except jwt.ExpiredSignatureError:
             raise ValueError("Token has expired")

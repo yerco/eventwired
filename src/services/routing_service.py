@@ -6,13 +6,15 @@ from typing import Callable, Dict, Union, List, Optional
 from src.core.static_handler import StaticFilesHandler
 from src.event_bus import Event, EventBus
 from src.services.config_service import ConfigService
+from src.services.jwt_service import JWTService
 from src.services.security.authentication_service import AuthenticationService
 
 
 class RoutingService:
-    def __init__(self, event_bus: EventBus, auth_service: AuthenticationService, config_service: ConfigService = ConfigService()):
+    def __init__(self, event_bus: EventBus, auth_service: AuthenticationService, jwt_service: Optional[JWTService], config_service: ConfigService = ConfigService()):
         self.event_bus = event_bus
         self.auth_service = auth_service
+        self.jwt_service = jwt_service
         self.config_service = config_service
         self.routes: Dict[str, Dict[str, Callable]] = {}
         self.patterns = {
@@ -21,9 +23,10 @@ class RoutingService:
             r'<(\w+)>': r'(?P<\1>[^/]+)',  # General pattern for other types
         }
         self.authenticated_routes: List[str] = []
+        self.jwt_authenticated_routes: List[str] = []  # New list for JWT protected routes
         self.static_handler = StaticFilesHandler(static_dir="static", static_url_path="/static")
 
-    def add_route(self, path: str, methods: Union[str, List[str]], handler: Callable, requires_auth: bool = False):
+    def add_route(self, path: str, methods: Union[str, List[str]], handler: Callable, requires_auth: bool = False, requires_jwt_auth: bool = False):
         if path not in self.routes:
             self.routes[path] = {}
 
@@ -37,9 +40,12 @@ class RoutingService:
             self.routes[regex_path] = self.routes.get(regex_path, {})
             self.routes[regex_path][method.upper()] = handler
 
-            # If authentication is required, add the path to the authenticated routes list
+            # If session-based authentication is required, add the path to the authenticated routes list
             if requires_auth:
                 self.authenticated_routes.append(regex_path)
+            # If JWT authentication is required, add the path to the JWT authenticated routes list
+            if requires_jwt_auth and self.jwt_service:
+                self.jwt_authenticated_routes.append(regex_path)
 
     def setup_static_routes(self, static_dir: str, static_url_path: str = "/static"):
         # Convert static_dir to an absolute path
@@ -93,19 +99,33 @@ class RoutingService:
             event.data['path_params'] = {'filename': filename}
             return await self.static_handler.handle(event)
 
-        # Check each registered route regex for a match
+        # Check for matching route
         for regex_path, methods in self.routes.items():
             match = re.match(regex_path, path)
             if match and method in methods:
                 # Extract path parameters from the regex match and add to event.data['path_params']
                 event.data['path_params'] = match.groupdict()
 
-                # Check if the route requires authentication
+                # Check if session-based authentication is required
                 if regex_path in self.authenticated_routes:
                     # Check if user is logged in (i.e., session contains user_id)
                     session = event.data.get('session')
                     if not session or not session.get('user_id'):
                         return await self.auth_service.send_unauthorized(event)
+
+                # Check if JWT-based authentication is required
+                if regex_path in self.jwt_authenticated_routes:
+                    auth_header = request.headers.get('authorization')
+                    if not auth_header or not auth_header.startswith('Bearer '):
+                        return await self.auth_service.send_unauthorized(event)
+
+                    token = auth_header.split(" ")[1]
+                    if self.jwt_service:
+                        try:
+                            payload = await self.jwt_service.validate_token(token)
+                            event.data["user"] = payload
+                        except ValueError:
+                            return await self.auth_service.send_unauthorized(event)
 
                 # If authentication is not required or the user is logged in, proceed with the request
                 handler = methods[method]
