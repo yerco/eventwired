@@ -27,18 +27,20 @@ class RoutingService:
         self.static_handler = StaticFilesHandler(static_dir="static", static_url_path="/static")
 
     def add_route(self, path: str, methods: Union[str, List[str]], handler: Callable, requires_auth: bool = False, requires_jwt_auth: bool = False):
-        if path not in self.routes:
-            self.routes[path] = {}
-
-        if isinstance(methods, str):
-            methods = [methods]
-
         # Convert the path to a regex pattern
         regex_path = self._convert_path_to_regex(path)
 
+        if regex_path not in self.routes:
+            self.routes[regex_path] = {}
+
+        if isinstance(methods, str):
+            methods = [methods.upper()]
+        else:
+            methods = [method.upper() for method in methods]
+
         for method in methods:
             self.routes[regex_path] = self.routes.get(regex_path, {})
-            self.routes[regex_path][method.upper()] = handler
+            self.routes[regex_path][method] = handler
 
             # If session-based authentication is required, add the path to the authenticated routes list
             if requires_auth:
@@ -102,36 +104,61 @@ class RoutingService:
         # Check for matching route
         for regex_path, methods in self.routes.items():
             match = re.match(regex_path, path)
-            if match and method in methods:
-                # Extract path parameters from the regex match and add to event.data['path_params']
-                event.data['path_params'] = match.groupdict()
+            if match:
+                print(f"Route matched for {path}, checking method: {method}")
+                print(f"Allowed methods: {methods}")
+                if method in methods:
+                    # Extract path parameters from the regex match and add to event.data['path_params']
+                    event.data['path_params'] = match.groupdict()
 
-                # Check if session-based authentication is required
-                if regex_path in self.authenticated_routes:
-                    # Check if user is logged in (i.e., session contains user_id)
-                    session = event.data.get('session')
-                    if not session or not session.get('user_id'):
-                        return await self.auth_service.send_unauthorized(event)
-
-                # Check if JWT-based authentication is required
-                if regex_path in self.jwt_authenticated_routes:
-                    auth_header = request.headers.get('authorization')
-                    if not auth_header or not auth_header.startswith('Bearer '):
-                        return await self.auth_service.send_unauthorized(event)
-
-                    token = auth_header.split(" ")[1]
-                    if self.jwt_service:
-                        try:
-                            payload = await self.jwt_service.validate_token(token)
-                            event.data["user"] = payload
-                        except ValueError:
+                    # Check if session-based authentication is required
+                    if regex_path in self.authenticated_routes:
+                        # Check if user is logged in (i.e., session contains user_id)
+                        session = event.data.get('session')
+                        if not session or not session.get('user_id'):
                             return await self.auth_service.send_unauthorized(event)
 
-                # If authentication is not required or the user is logged in, proceed with the request
-                handler = methods[method]
-                return await handler(event)
+                    # Check if JWT-based authentication is required
+                    if regex_path in self.jwt_authenticated_routes:
+                        auth_header = request.headers.get('authorization')
+                        if not auth_header or not auth_header.startswith('Bearer '):
+                            return await self.auth_service.send_unauthorized(event)
+
+                        token = auth_header.split(" ")[1]
+                        if self.jwt_service:
+                            try:
+                                payload = await self.jwt_service.validate_token(token)
+                                event.data["user"] = payload
+                            except ValueError:
+                                return await self.auth_service.send_unauthorized(event)
+
+                    # If authentication is not required or the user is logged in, proceed with the request
+                    handler = methods[method]
+                    return await handler(event)
+                else:
+                    print(f"Method {method} not allowed for {path}")
+                    # Send 405 Method Not Allowed response
+                    await self.send_405(event)
+                    return  # Ensure no further processing happens
 
         await self.handle_404(event)
+
+    async def send_405(self, event: Event):
+        send = event.data.get('send')
+        if send:
+            await send({
+                'type': 'http.response.start',
+                'status': 405,
+                'headers': [
+                    [b'content-type', b'text/plain'],
+                ],
+            })
+            await send({
+                'type': 'http.response.body',
+                'body': b'Method Not Allowed',
+            })
+        # Mark the response as already sent
+        event.data['response_already_sent'] = True
 
     async def handle_404(self, event: Event):
         send = event.data.get('send')

@@ -17,10 +17,16 @@ class MiddlewareService:
         # Pass the event through all registered middlewares before reaching the handler
         for middleware, _ in self.middlewares:
             if hasattr(middleware, 'before_request'):
-                event = await middleware.before_request(event)
+                try:
+                    event = await middleware.before_request(event)
+                except Exception as e:
+                    print(f"Middleware {middleware} failed: {e}")
 
         # Call the main handler (controller logic) after all middlewares have run
         await handler(event)
+
+        if event.data.get('response_already_sent', False):
+            return  # Stop processing since the response has already been sent e.g. 405
 
         # Pass the event and response back through the middlewares (after_request)
         for middleware, _ in reversed(self.middlewares):
