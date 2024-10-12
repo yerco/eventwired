@@ -14,6 +14,7 @@ from src.services.publisher_service import PublisherService
 from src.services.websocket_service import WebSocketService
 from src.services.factories import create_redis_service
 from src.services.config_service import ConfigService
+from src.services.jwt_service import JWTService
 
 from src.middleware.timing_middleware import TimingMiddleware
 from src.middleware.csrf_middleware import CSRFMiddleware
@@ -21,6 +22,7 @@ from src.middleware.session_middleware import SessionMiddleware
 
 from demo_app.config import config
 from demo_app.subscriber_setup import register_subscribers
+# from demo_app.middleware.ip_geolocation_middleware import IpGeolocationMiddleware
 
 # Register services in the DI container
 config_service = ConfigService(config)
@@ -47,12 +49,14 @@ di_container.register_singleton(orm_service, 'ORMService')
 di_container.register_transient(PasswordService, 'PasswordService')
 auth_service = AuthenticationService(orm_service=orm_service, config_service=config_service)
 di_container.register_singleton(auth_service, 'AuthenticationService')
+jwt_service = JWTService(config_service=config_service)
+di_container.register_singleton(jwt_service, 'JWTService')
 
 # Initialize the session service and register it
 session_service = SessionService(orm_service=orm_service, config_service=config_service)
 di_container.register_singleton(session_service, 'SessionService')
 
-routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
+routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
 di_container.register_singleton(routing_service, 'RoutingService')
 
 publisher_service = PublisherService(event_bus=event_bus)
@@ -65,10 +69,7 @@ middleware_service = MiddlewareService()
 middleware_service.register_middleware(SessionMiddleware(session_service), priority=10)
 csrf_middleware = CSRFMiddleware()
 middleware_service.register_middleware(csrf_middleware, priority=5)  # lower priority than session middleware
-# HTTPS redirect middleware experimental
-# https_redirect_middleware = HTTPSRedirectMiddleware(permanent=True)
-# middleware_service.register_middleware(https_redirect_middleware, priority=10)
 
-# middleware_service.register_middleware(LoggingMiddleware(), priority=0)
+# middleware_service.register_middleware(IpGeolocationMiddleware(), priority=0)
 middleware_service.register_middleware(TimingMiddleware(), priority=1)
 di_container.register_singleton(middleware_service, 'MiddlewareService')

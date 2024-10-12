@@ -1,7 +1,7 @@
 import pytest
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, PropertyMock, patch
 
-from demo_app.di_setup import auth_service, orm_service
+from demo_app.di_setup import auth_service, orm_service, jwt_service
 from src.services.config_service import ConfigService
 from src.services.routing_service import RoutingService
 from src.event_bus import Event, EventBus
@@ -15,7 +15,8 @@ async def test_add_and_remove_route():
     event_bus = EventBus()
     config_service = AsyncMock()
     auth_service = AsyncMock()
-    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
+    jwt_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
 
     handler = AsyncMock()
 
@@ -41,7 +42,8 @@ async def test_route_to_correct_handler(monkeypatch):
     event_bus = EventBus()
     config_service = AsyncMock()
     auth_service = AsyncMock()
-    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
+    jwt_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
 
     handler = AsyncMock()
 
@@ -70,7 +72,8 @@ async def test_handle_404(monkeypatch):
     event_bus = EventBus()
     config_service = AsyncMock()
     auth_service = AsyncMock()
-    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
+    jwt_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
 
     # Create a mock event that should trigger a 404
     mock_send = AsyncMock()
@@ -101,7 +104,8 @@ async def test_multiple_routes_and_methods(monkeypatch):
     event_bus = EventBus()
     config_service = AsyncMock()
     auth_service = AsyncMock()
-    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
+    jwt_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
 
     handler_get = AsyncMock()
     handler_post = AsyncMock()
@@ -142,7 +146,8 @@ async def test_route_with_int_param(monkeypatch):
     event_bus = EventBus()
     config_service = AsyncMock()
     auth_service = AsyncMock()
-    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
+    jwt_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
 
     handler = AsyncMock()
 
@@ -173,7 +178,8 @@ async def test_route_with_str_param(monkeypatch):
     event_bus = EventBus()
     config_service = AsyncMock()
     auth_service = AsyncMock()
-    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
+    jwt_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
 
     handler = AsyncMock()
 
@@ -204,7 +210,8 @@ async def test_route_with_multiple_params(monkeypatch):
     event_bus = EventBus()
     config_service = AsyncMock()
     auth_service = AsyncMock()
-    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
+    jwt_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
 
     handler = AsyncMock()
 
@@ -235,7 +242,8 @@ async def test_handle_404_for_unmatched_param_route(monkeypatch):
     event_bus = EventBus()
     config_service = AsyncMock()
     auth_service = AsyncMock()
-    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
+    jwt_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
 
     # Add a route that expects an integer parameter
     routing_service.add_route('/page/<int:id>', 'GET', AsyncMock())
@@ -274,7 +282,8 @@ async def test_websocket_route_add_and_remove():
     event_bus = EventBus()
     config_service = AsyncMock()
     auth_service = AsyncMock()
-    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
+    jwt_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
 
     handler = AsyncMock()
 
@@ -300,7 +309,8 @@ async def test_route_to_correct_websocket_handler(monkeypatch):
     event_bus = EventBus()
     config_service = AsyncMock()
     auth_service = AsyncMock()
-    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
+    jwt_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
 
     handler = AsyncMock()
 
@@ -332,7 +342,8 @@ async def test_handle_websocket_disconnect(monkeypatch):
     event_bus = EventBus()
     config_service = AsyncMock()
     auth_service = AsyncMock()
-    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
+    jwt_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
 
     handler = AsyncMock()
 
@@ -372,7 +383,8 @@ async def test_handle_websocket_binary_message(monkeypatch):
     event_bus = EventBus()
     config_service = AsyncMock()
     auth_service = AsyncMock()
-    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, config_service=config_service)
+    jwt_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
 
     handler = AsyncMock()
 
@@ -405,3 +417,160 @@ async def test_handle_websocket_binary_message(monkeypatch):
     # Check if binary message was handled properly
     await receive()
     handler.assert_called()
+
+
+@pytest.mark.asyncio
+async def test_route_with_jwt_auth_valid_token(monkeypatch):
+    event_bus = EventBus()
+    config_service = AsyncMock()
+    auth_service = AsyncMock()
+    jwt_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
+
+    handler = AsyncMock()
+
+    # Add a JWT-authenticated route
+    routing_service.add_route('/api/protected', 'GET', handler, requires_jwt_auth=True)
+
+    # Create a mock request object
+    scope = {'path': '/api/protected', 'method': 'GET'}
+    receive = AsyncMock()
+    send = AsyncMock()
+    request = Request(scope, receive)
+
+    # Mock headers property to return the JWT token
+    with patch('src.core.request.Request.headers', new_callable=PropertyMock) as mock_headers:
+        mock_headers.return_value = {'authorization': 'Bearer valid_token'}
+
+        # Mock JWTService to return valid payload
+        jwt_service.validate_token = AsyncMock(return_value={"user_id": 123})
+
+        # Create an event
+        event = Event(name='http.request.received', data={
+            'request': request,
+            'send': send
+        })
+
+        # Route the event
+        await routing_service.route_event(event)
+
+        # Ensure that the handler was called
+        handler.assert_called_once_with(event)
+        assert event.data['user'] == {"user_id": 123}
+
+
+@pytest.mark.asyncio
+async def test_route_with_jwt_auth_expired_token(monkeypatch):
+    event_bus = EventBus()
+    config_service = AsyncMock()
+    auth_service = AsyncMock()
+    jwt_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
+
+    handler = AsyncMock()
+
+    # Add a JWT-authenticated route
+    routing_service.add_route('/api/protected', 'GET', handler, requires_jwt_auth=True)
+
+    # Create a mock request object
+    scope = {'path': '/api/protected', 'method': 'GET'}
+    receive = AsyncMock()
+    send = AsyncMock()
+    request = Request(scope, receive)
+
+    # Mock headers property to return the JWT token
+    with patch('src.core.request.Request.headers', new_callable=PropertyMock) as mock_headers:
+        mock_headers.return_value = {'authorization': 'Bearer expired_token'}
+
+        # Mock JWTService to raise ExpiredSignatureError
+        jwt_service.validate_token = AsyncMock(side_effect=ValueError("Token has expired"))
+
+        # Create an event
+        event = Event(name='http.request.received', data={
+            'request': request,
+            'send': send
+        })
+
+        # Route the event
+        await routing_service.route_event(event)
+
+        # Ensure that the unauthorized handler is called
+        auth_service.send_unauthorized.assert_called_once_with(event)
+        handler.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_route_with_jwt_auth_invalid_token(monkeypatch):
+    event_bus = EventBus()
+    config_service = AsyncMock()
+    auth_service = AsyncMock()
+    jwt_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
+
+    handler = AsyncMock()
+
+    # Add a JWT-authenticated route
+    routing_service.add_route('/api/protected', 'GET', handler, requires_jwt_auth=True)
+
+    # Create a mock request object
+    scope = {'path': '/api/protected', 'method': 'GET'}
+    receive = AsyncMock()
+    send = AsyncMock()
+    request = Request(scope, receive)
+
+    # Mock headers property to return the JWT token
+    with patch('src.core.request.Request.headers', new_callable=PropertyMock) as mock_headers:
+        mock_headers.return_value = {'authorization': 'Bearer invalid_token'}
+
+        # Mock JWTService to raise InvalidTokenError
+        jwt_service.validate_token = AsyncMock(side_effect=ValueError("Invalid token"))
+
+        # Create an event
+        event = Event(name='http.request.received', data={
+            'request': request,
+            'send': send
+        })
+
+        # Route the event
+        await routing_service.route_event(event)
+
+        # Ensure that the unauthorized handler is called
+        auth_service.send_unauthorized.assert_called_once_with(event)
+        handler.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_route_with_jwt_auth_no_token(monkeypatch):
+    event_bus = EventBus()
+    config_service = AsyncMock()
+    auth_service = AsyncMock()
+    jwt_service = AsyncMock()
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
+
+    handler = AsyncMock()
+
+    # Add a JWT-authenticated route
+    routing_service.add_route('/api/protected', 'GET', handler, requires_jwt_auth=True)
+
+    # Create a mock request object
+    scope = {'path': '/api/protected', 'method': 'GET'}
+    receive = AsyncMock()
+    send = AsyncMock()
+    request = Request(scope, receive)
+
+    # Mock headers property to simulate missing JWT token
+    with patch('src.core.request.Request.headers', new_callable=PropertyMock) as mock_headers:
+        mock_headers.return_value = {}  # No authorization header
+
+        # Create an event
+        event = Event(name='http.request.received', data={
+            'request': request,
+            'send': send
+        })
+
+        # Route the event
+        await routing_service.route_event(event)
+
+        # Ensure that the unauthorized handler is called
+        auth_service.send_unauthorized.assert_called_once_with(event)
+        handler.assert_not_called()
