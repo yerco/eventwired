@@ -49,6 +49,14 @@ class DIContainer:
             return await self._create_instance(self._services[name])
         raise Exception(f"Service {name} not found")
 
+    # Synchronous get method to retrieve already instantiated services
+    def get_sync(self, name):
+        # Check if the requested service is already a singleton (pre-instantiated)
+        if name in self._singletons:
+            return self._singletons[name]
+        # If not found or needs async initialization, raise an exception
+        raise Exception(f"Service {name} not found or requires async initialization")
+
     async def _create_instance(self, class_type):
         constructor = inspect.signature(class_type.__init__)
         dependencies = []

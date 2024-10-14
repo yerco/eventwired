@@ -32,18 +32,41 @@ class EventBus:
         self.listeners[event_name].append(listener)
 
     async def publish(self, event: Event):
+        handled = False
         if event.name in self.listeners:
             for listener in self.listeners[event.name]:
                 try:
                     if asyncio.iscoroutinefunction(listener):
                         await listener(event)  # Await the coroutine function
+                        handled = True
                     elif asyncio.iscoroutine(listener):
                         await listener  # Await if it's already a coroutine object
+                        handled = True
                     else:
                         listener(event)  # Synchronous function call
+                        handled = True
                 except Exception as e:
                     if "websocket.close" in str(e):
                         # Gracefully handle WebSocket closure errors
                         print(f"WebSocket already closed for event '{event.name}': {e}")
                     else:
                         print(f"Error in listener for event '{event.name}': {e}")
+        if not handled:
+            await self.handle_unhandled_event(event)  # Call the fallback if not handled
+
+    async def handle_unhandled_event(self, event):
+        # Default behavior for unhandled events
+        print(f"Event '{event.name}' was not handled. Triggering fallback.")
+        if 'send' in event.data:
+            if event.data['scope']['type'] == 'websocket':
+                print("Cannot send HTTP response for WebSocket event")
+                return  # Skip sending HTTP response for WebSocket events
+            await event.data['send']({
+                'type': 'http.response.start',
+                'status': 500,
+                'headers': [[b'content-type', b'text/plain']],
+            })
+            await event.data['send']({
+                'type': 'http.response.body',
+                'body': b'Internal Server Error - Event not handled',
+            })

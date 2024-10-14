@@ -105,8 +105,6 @@ class RoutingService:
         for regex_path, methods in self.routes.items():
             match = re.match(regex_path, path)
             if match:
-                print(f"Route matched for {path}, checking method: {method}")
-                print(f"Allowed methods: {methods}")
                 if method in methods:
                     # Extract path parameters from the regex match and add to event.data['path_params']
                     event.data['path_params'] = match.groupdict()
@@ -146,34 +144,12 @@ class RoutingService:
     async def send_405(self, event: Event):
         send = event.data.get('send')
         if send:
-            await send({
-                'type': 'http.response.start',
-                'status': 405,
-                'headers': [
-                    [b'content-type', b'text/plain'],
-                ],
-            })
-            await send({
-                'type': 'http.response.body',
-                'body': b'Method Not Allowed',
-            })
-        # Mark the response as already sent
-        event.data['response_already_sent'] = True
+            await self.event_bus.publish(Event(name="http.error.405", data=event.data))
 
     async def handle_404(self, event: Event):
         send = event.data.get('send')
         if send:
-            await send({
-                'type': 'http.response.start',
-                'status': 404,
-                'headers': [
-                    [b'content-type', b'text/plain'],
-                ],
-            })
-            await send({
-                'type': 'http.response.body',
-                'body': b'Not Found',
-            })
+            await self.event_bus.publish(Event(name="http.error.404", data=event.data))
 
     async def start_routing(self):
         self.event_bus.subscribe("http.request.received", self.route_event)

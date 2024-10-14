@@ -61,38 +61,28 @@ async def test_handle_http_requests_success():
 
 @pytest.mark.asyncio
 async def test_handle_http_requests_middleware_failure():
-    # Step 1: Mock dependencies
     mock_event_bus = AsyncMock()
     mock_middleware_service = AsyncMock(MiddlewareService)
     mock_send = AsyncMock()  # Ensure this is AsyncMock
     mock_receive = AsyncMock()
     mock_request = AsyncMock()
 
-    # Step 2: Mock middleware_service.execute to raise an exception
     mock_middleware_service.execute.side_effect = Exception("Middleware Failure")
 
-    # Step 3: Mock the DI container to return the EventBus and MiddlewareService
     mock_di_container = AsyncMock()
     mock_di_container.get.side_effect = lambda service_name: {
         'EventBus': mock_event_bus,
         'MiddlewareService': mock_middleware_service
     }[service_name]
 
-    # Step 4: Mock the scope (path, method, etc.)
     scope = {'path': '/test', 'method': 'GET'}
 
-    # Step 5: Call the handle_http_requests function
     await handle_http_requests(scope, mock_receive, mock_send, mock_request, mock_di_container)
 
-    # Step 6: Assert that send was called with 500 status and error message
-    mock_send.assert_has_calls([
-        call({
-            'type': 'http.response.start',
-            'status': 500,
-            'headers': [[b'content-type', b'text/plain']],
-        }),
-        call({
-            'type': 'http.response.body',
-            'body': b'Internal Server Error',
-        })
-    ], any_order=True)
+    # Assert that the 500 error event was published with the expected data
+    assert mock_event_bus.publish.called, "The event bus did not publish any events."
+    actual_event = mock_event_bus.publish.call_args[0][0]
+    assert actual_event.name == 'http.error.500'
+    assert 'exception' in actual_event.data
+    assert 'traceback' in actual_event.data
+    assert actual_event.data['exception'].args[0] == "Middleware Failure"

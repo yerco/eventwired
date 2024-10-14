@@ -1,4 +1,4 @@
-from src.core.app_handler import framework_app
+from src.core.framework_app import framework_app
 
 from demo_app.routes import register_routes
 

@@ -1,12 +1,9 @@
 import pytest
 from unittest.mock import AsyncMock, PropertyMock, patch
 
-from demo_app.di_setup import auth_service, orm_service, jwt_service
-from src.services.config_service import ConfigService
 from src.services.routing_service import RoutingService
 from src.event_bus import Event, EventBus
 from src.core.request import Request
-from src.services.security.authentication_service import AuthenticationService
 
 
 # HTTP
@@ -75,6 +72,8 @@ async def test_handle_404(monkeypatch):
     jwt_service = AsyncMock()
     routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
 
+    event_bus.publish = AsyncMock()
+
     # Create a mock event that should trigger a 404
     mock_send = AsyncMock()
     event = Event(name='http.request.received', data={
@@ -85,18 +84,11 @@ async def test_handle_404(monkeypatch):
     # Route the event
     await routing_service.route_event(event)
 
-    # Ensure the 404 handler was called and sent the correct response
-    mock_send.assert_any_call({
-        'type': 'http.response.start',
-        'status': 404,
-        'headers': [
-            [b'content-type', b'text/plain'],
-        ],
-    })
-    mock_send.assert_any_call({
-        'type': 'http.response.body',
-        'body': b'Not Found',
-    })
+    # Capture the actual event published
+    actual_event = event_bus.publish.call_args[0][0]
+
+    assert actual_event.name == 'http.error.404'
+    assert actual_event.data == event.data
 
 
 @pytest.mark.asyncio
@@ -248,6 +240,8 @@ async def test_handle_404_for_unmatched_param_route(monkeypatch):
     # Add a route that expects an integer parameter
     routing_service.add_route('/page/<int:id>', 'GET', AsyncMock())
 
+    event_bus.publish = AsyncMock()
+
     # Create a mock request object that doesn't match the parameter type (string instead of int)
     scope = {'path': '/page/abc', 'method': 'GET'}
     receive = AsyncMock()
@@ -263,18 +257,11 @@ async def test_handle_404_for_unmatched_param_route(monkeypatch):
     # Route the event, which should trigger a 404
     await routing_service.route_event(event)
 
-    # Ensure the 404 handler was called and sent the correct response
-    mock_send.assert_any_call({
-        'type': 'http.response.start',
-        'status': 404,
-        'headers': [
-            [b'content-type', b'text/plain'],
-        ],
-    })
-    mock_send.assert_any_call({
-        'type': 'http.response.body',
-        'body': b'Not Found',
-    })
+    # Capture the actual event published
+    actual_event = event_bus.publish.call_args[0][0]
+
+    assert actual_event.name == 'http.error.404'
+    assert actual_event.data == event.data
 
 # Websockets
 @pytest.mark.asyncio
