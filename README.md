@@ -64,11 +64,12 @@ YASGI was built as an exploratory tool to understand and teach asynchronous, eve
 ## Event Handling Example
 
 In YASGI, events are managed using an event-driven approach. You can listen for specific events and define your custom behavior. Here’s an example of how to capture successful user login attempts while storing that information in a database.
-    ```python
+
+   ```python
    # demo_app/subscriber_setup.py
    def register_subscribers(event_bus):
        event_bus.subscribe("user.login.success", log_event_to_db)
-    ```
+   ```
 
    ```python
    # demo_app/subscribers/event_log_subscriber.py
