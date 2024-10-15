@@ -2,7 +2,7 @@
 
 # YASGI
 
-A lightweight, async-first web framework built with modern web development in mind. **This is work in progress** focused first on educational purposes.
+A lightweight, async-first web framework built with modern web development in mind. **This is a work in progress** that primarily serves **educational purposes**.
 
 🔗 **[Live Demo](https://yasgi-frame.work)**
 
@@ -33,7 +33,7 @@ A lightweight, async-first web framework built with modern web development in mi
 
 4. Run the server
 
-   Currently, the server only supports **Uvicorn**.
+   Currently, the server supports **Uvicorn**.
 
    **Using Uvicorn:**
    ```bash
@@ -51,22 +51,46 @@ A lightweight, async-first web framework built with modern web development in mi
    $ pytest --cov=demo_app --cov-report=html
    ```
 
-## User-Centric Framework Design
-YASGI is designed to give you full control over your application, making it easy to use the tools provided by the
-framework without enforcing a rigid structure. This user-centric approach allows you to integrate features like
-routing, event handling, and services in a way that best suits your application.
+## Why use YASGI
 
-I encourage you to explore the demo_app provided with the framework. The `demo_app` serves as an example of
-how to structure your project using the framework’s components, including dependency injection, routing,
-templating, and more. By examining and running the `demo_app`, you’ll get a clear understanding of how to
-leverage the framework’s capabilities to build your own ASGI applications.
+YASGI was built as an exploratory tool to understand and teach asynchronous, event-driven architectures (EDM). It’s designed for developers who want to explore real-time, non-blocking operations in a manageable, lightweight framework.
+
+### What makes YASGI different?
+
+- **Event-Driven Architecture (EDM)**:YASGI employs an event bus for handling system events like 404/500 errors, WebSocket connections, or custom user-defined events. This makes it flexible and ideal for real-time features like chat apps or IoT.
+- **Asynchronous by Design**: Built to leverage Python’s async capabilities, YASGI makes real-time apps scalable and performant.
+- **Microservices-Ready**: It’s lightweight and built to scale easily in microservices architectures.
+
+## Event Handling Example
+
+In YASGI, events are managed using an event-driven approach. You can listen for specific events and define your custom behavior. Here’s an example of how to capture successful user login attempts while storing that information in a database.
+    ```python
+   # demo_app/subscriber_setup.py
+   def register_subscribers(event_bus):
+       event_bus.subscribe("user.login.success", log_event_to_db)
+    ```
+
+   ```python
+   # demo_app/subscribers/event_log_subscriber.py
+   async def log_event_to_db(event: Event):
+      orm_service = await di_container.get('ORMService')
+   
+      await orm_service.create(EventLog, event_name=event.name, additional_data=str(event.data))
+   ```
+This system enables you to define your app’s responses to events, offering flexibility for error handling, logging, and more.
+
+## User-Centric Framework Design
+
+YASGI is designed to provide flexibility without enforcing a rigid structure. The framework allows you to integrate routing, event handling, and services in a way that suits your application’s needs.
+
+The `demo_app`  provided with the framework serves as an example of how to structure a project, demonstrating key components such as dependency injection, routing, and templating. By exploring and running the demo_app, you’ll gain insights into leveraging YASGI’s features to build your own ASGI applications.
 
 ## Important Note
-For most developers, everything needed to build your project is found within the `demo_app` folder.
-It serves as the go-to example for project structure and implementation. The `src` folder, on the other hand,
-contains the internal framework workings and is generally not necessary to modify when building your application.
+
+For most developers, everything needed to build your project is found within the `demo_app` folder. It serves as the go-to example for project structure and implementation. The `src` folder contains the internal framework workings and typically doesn't need to be modified.
 
 ## Example Routes
+
 Define routes easily with Python:
    ```python
    from demo_app.controllers.welcome_controller import welcome_controller
@@ -76,8 +100,8 @@ Define routes easily with Python:
    ```
    
 ## Example Controllers
-Controllers are simple Python functions that handle requests and return responses. They can be as simple or complex
-as needed.
+
+Controllers are simple Python functions that handle requests and return responses. They can be as simple or complex as needed. Here’s an example of a controller that renders an HTML template:
    ```python
    from src.controllers.base_controller import BaseController
    from src.event_bus import Event
@@ -91,8 +115,8 @@ as needed.
    ```
    
 ## Real-Time Chat Room Example
-With YASGI, you can create a real-time chat room with just a few lines of code. The demo_app includes a chat room
-available at `/chat_room`. Below is all you need to write to set up a chat room using WebSockets:
+
+With YASGI, you can create a real-time chat room with just a few lines of code. The `demo_app` includes a chat room available at `/chat_room`. Below is all you need to write to set up a chat room using WebSockets:
 
    ```python
    from src.controllers.base_controller import BaseController

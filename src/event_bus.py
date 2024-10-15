@@ -58,15 +58,28 @@ class EventBus:
         # Default behavior for unhandled events
         print(f"Event '{event.name}' was not handled. Triggering fallback.")
         if 'send' in event.data:
-            if event.data['scope']['type'] == 'websocket':
+            if 'scope' in event.data and event.data['scope']['type'] == 'websocket':
                 print("Cannot send HTTP response for WebSocket event")
                 return  # Skip sending HTTP response for WebSocket events
-            await event.data['send']({
-                'type': 'http.response.start',
-                'status': 500,
-                'headers': [[b'content-type', b'text/plain']],
-            })
-            await event.data['send']({
-                'type': 'http.response.body',
-                'body': b'Internal Server Error - Event not handled',
-            })
+
+            # Check if a response has already been sent
+            if event.data.get('response_already_sent', False):
+                print("Response already sent, skipping fallback response.")
+                return
+
+            # Mark the response as sent to prevent duplicate responses
+            event.data['response_already_sent'] = True
+
+            # Send the fallback HTTP response
+            try:
+                await event.data['send']({
+                    'type': 'http.response.start',
+                    'status': 500,
+                    'headers': [[b'content-type', b'text/plain']],
+                })
+                await event.data['send']({
+                    'type': 'http.response.body',
+                    'body': b'Internal Server Error - Event not handled',
+                })
+            except Exception as e:
+                print(f"Error sending fallback response: {e}")

@@ -1,7 +1,11 @@
+# Fallbacks
+from src.subscribers.error_subscribers import handle_404_event, handle_405_event, handle_500_event
+
 from demo_app.subscribers.logging_subscriber import log_request_response
 from demo_app.subscribers.timing_subscriber import request_received, request_completed
 from demo_app.subscribers.event_log_subscriber import log_event_to_db
-from src.subscribers.error_subscribers import handle_404_event, handle_405_event, handle_500_event
+# Overridden fallbacks
+from demo_app.subscribers.error_subscribers import handle_404_event, handle_405_event, handle_500_event
 
 
 def register_subscribers(event_bus):
