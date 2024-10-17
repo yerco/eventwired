@@ -9,20 +9,34 @@ from src.dicontainer import di_container
 from src.event_bus import Event
 
 
-async def framework_app(scope: dict, receive: Callable, send: Callable, user_startup_callback=None) -> None:
-    try:
-        request = Request(scope, receive)
-        if scope['type'] == 'lifespan':
-            await handle_lifespan_events(scope, receive, send, request, di_container, user_startup_callback)
-        elif scope['type'] == 'http':
-            await handle_http_requests(scope, receive, send, request, di_container)
-        elif scope['type'] == 'websocket':
-            await handle_websocket_connections(scope, receive, send, request, di_container)
-    except Exception as e:
-        print(f"Error in ASGI application: {e}")
-        #print(traceback.format_exc())
+class FrameworkApp:
+    def __init__(self, user_startup_callback: Callable = None):
+        self.user_startup_callback = user_startup_callback
+        self._initialized = False
 
-        # Publish the error event without sending the response directly
-        event_bus = await di_container.get('EventBus')
-        event = Event(name="http.error.500", data={'exception': e, 'traceback': traceback.format_exc(), 'request': request, 'send': send})
-        await event_bus.publish(event)
+    async def __call__(self, scope: dict, receive: Callable, send: Callable) -> None:
+        if not self._initialized:
+            await self.startup()
+            self._initialized = True
+
+        try:
+            request = Request(scope, receive)
+            if scope['type'] == 'lifespan':
+                await handle_lifespan_events(scope, receive, send, request, di_container, self.user_startup_callback)
+            elif scope['type'] == 'http':
+                await handle_http_requests(scope, receive, send, request, di_container)
+            elif scope['type'] == 'websocket':
+                await handle_websocket_connections(scope, receive, send, request, di_container)
+        except Exception as e:
+            print(f"Error in ASGI application: {e}")
+            #print(traceback.format_exc())
+
+            # Publish the error event without sending the response directly
+            event_bus = await di_container.get('EventBus')
+            event = Event(name="http.error.500", data={'exception': e, 'traceback': traceback.format_exc(), 'request': request, 'send': send})
+            await event_bus.publish(event)
+
+    async def startup(self):
+        # Run the user-defined startup callback if provided
+        if self.user_startup_callback:
+            await self.user_startup_callback(di_container)
