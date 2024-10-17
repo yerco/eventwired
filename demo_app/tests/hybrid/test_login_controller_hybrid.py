@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, Mock, ANY
 
+from src.core.setup_registry import run_setups
 from src.event_bus import Event
 
 from demo_app.controllers.login_controller import login_controller
@@ -9,6 +10,8 @@ from demo_app.di_setup import di_container
 
 @pytest.mark.asyncio
 async def test_login_controller_post_success_hybrid_using_real_orm(monkeypatch):
+    # Set up the full DI container
+    await run_setups(di_container)
     # Initialize the real ORMService
     orm_service = await di_container.get('ORMService')
     await orm_service.init()  # This ensures that the engine and adapter are set up

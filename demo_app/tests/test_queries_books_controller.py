@@ -1,12 +1,9 @@
 from datetime import date
-from distutils.core import setup
 
 import pytest
 from unittest.mock import AsyncMock, MagicMock, Mock, patch, ANY
 
-from demo_app.di_setup import redis_service
 from demo_app.forms.book_form import BookForm
-from demo_app.handlers.book_handlers import BookQueryHandler
 from src.event_bus import Event
 
 from demo_app.controllers.queries_books_controller import queries_books_controller
