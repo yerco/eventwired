@@ -73,6 +73,9 @@ async def setup_services(container):
     session_service = SessionService(orm_service=orm_service, config_service=config_service)
     di_container.register_singleton(session_service, 'SessionService')
     routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
+    # Set up static file routes with the user-provided static directory
+    routing_service.setup_static_routes(static_dir="demo_app/static", static_url_path="/static")
+    await routing_service.start_routing()
     di_container.register_singleton(routing_service, 'RoutingService')
     publisher_service = PublisherService(event_bus=event_bus)
     di_container.register_singleton(publisher_service, 'PublisherService')
