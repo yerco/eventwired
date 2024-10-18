@@ -26,6 +26,12 @@ class RoutingService:
         self.jwt_authenticated_routes: List[str] = []  # New list for JWT protected routes
         self.static_handler = StaticFilesHandler(static_dir="static", static_url_path="/static")
 
+    async def initialize(self):
+        static_dir = self.config_service.get('STATIC_DIR', 'static')
+        static_url_path = self.config_service.get('STATIC_URL_PATH', '/static')
+        self.setup_static_routes(static_dir, static_url_path)
+        await self.start_routing()
+
     def add_route(self, path: str, methods: Union[str, List[str]], handler: Callable, requires_auth: bool = False, requires_jwt_auth: bool = False):
         # Convert the path to a regex pattern
         regex_path = self._convert_path_to_regex(path)

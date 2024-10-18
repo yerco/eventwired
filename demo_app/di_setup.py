@@ -56,8 +56,7 @@ async def setup_event_bus(container):
 async def setup_orm_service(container):
     config_service = await container.get('ConfigService')
     orm_service = ORMService(config_service=config_service, Base=Base)
-    await orm_service.init()
-    await orm_service.create_tables()
+    await orm_service.initialize()
     di_container.register_singleton(orm_service, 'ORMService')
 
 @di_setup
@@ -72,15 +71,20 @@ async def setup_services(container):
     di_container.register_singleton(jwt_service, 'JWTService')
     session_service = SessionService(orm_service=orm_service, config_service=config_service)
     di_container.register_singleton(session_service, 'SessionService')
-    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
-    # Set up static file routes with the user-provided static directory
-    routing_service.setup_static_routes(static_dir="demo_app/static", static_url_path="/static")
-    await routing_service.start_routing()
-    di_container.register_singleton(routing_service, 'RoutingService')
     publisher_service = PublisherService(event_bus=event_bus)
     di_container.register_singleton(publisher_service, 'PublisherService')
     websocket_service = WebSocketService()  # (event_bus=event_bus)
     di_container.register_singleton(websocket_service, 'WebSocketService')
+
+@di_setup
+async def setup_routing_service(container):
+    event_bus = await container.get('EventBus')
+    auth_service = await container.get('AuthenticationService')
+    jwt_service = await container.get('JWTService')
+    config_service = await container.get('ConfigService')
+    routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)
+    await routing_service.initialize()
+    di_container.register_singleton(routing_service, 'RoutingService')
 
 # Middleware setup
 @di_setup

@@ -15,6 +15,10 @@ class ORMService:
         self.engine: AsyncSession = None
         self.Session: sessionmaker = None
 
+    async def initialize(self):
+        await self.init()
+        await self.create_tables()
+
     async def init(self, db_path: str = 'default.db'):
         db_url = self.config_service.get('DATABASE_URL', f'sqlite+aiosqlite:///{db_path}')
         # Initialize SQLAlchemy engine and adapter

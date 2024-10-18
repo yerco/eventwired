@@ -12,7 +12,7 @@ from demo_app.controllers.commands_books_controller import commands_books_contro
 from demo_app.controllers.api_controllers import api_login_controller, api_protected_controller
 
 
-def register_routes(routing_service):
+async def register_routes(routing_service):
     routing_service.add_route('/', 'GET', welcome_controller)
     routing_service.add_route('/hello', 'GET', hello_controller, requires_auth=True)
     routing_service.add_route('/home', 'GET', home_controller)
