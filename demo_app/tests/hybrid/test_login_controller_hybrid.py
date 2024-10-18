@@ -6,16 +6,11 @@ from src.event_bus import Event
 
 from demo_app.controllers.login_controller import login_controller
 from demo_app.di_setup import di_container
+from src.services.orm_service import ORMService
 
 
 @pytest.mark.asyncio
 async def test_login_controller_post_success_hybrid_using_real_orm(monkeypatch):
-    # Set up the full DI container
-    await run_setups(di_container)
-    # Initialize the real ORMService
-    orm_service = await di_container.get('ORMService')
-    await orm_service.init()  # This ensures that the engine and adapter are set up
-
     # Mock the form service
     mock_form_service = AsyncMock()
 
@@ -41,6 +36,10 @@ async def test_login_controller_post_success_hybrid_using_real_orm(monkeypatch):
     mock_user.id = 1  # Set the user ID to 1
     mock_user.username = 'validuser'
     mock_auth_service.authenticate_user.return_value = mock_user  # Return the mock user
+
+    config_service = Mock()
+    Base = Mock()
+    orm_service = ORMService(config_service=config_service, Base=Base)
 
     # Inject the services through DI container
     async def mock_get(service_name):
