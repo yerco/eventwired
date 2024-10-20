@@ -1,10 +1,9 @@
 import pytest
-import time
 
 from datetime import datetime, timedelta
 
-from src.distributor import Distributor
-from src.event_bus import Event
+from src.core.distributor import Distributor
+from src.core.event_bus import Event
 
 
 @pytest.mark.asyncio

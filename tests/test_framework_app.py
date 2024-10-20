@@ -3,7 +3,7 @@ import traceback
 from unittest.mock import AsyncMock, Mock
 
 from src.core.framework_app import FrameworkApp
-from src.dicontainer import di_container
+from src.core.dicontainer import di_container
 
 
 @pytest.mark.asyncio

@@ -2,7 +2,7 @@ import asyncio
 from typing import Callable, Any
 
 from src.core.request import Request
-from src.event_bus import Event
+from src.core.event_bus import Event
 
 
 async def handle_websocket_connections(scope: dict, receive: Callable, send: Callable, request: Request, di_container: Any) -> None:

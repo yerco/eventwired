@@ -1,6 +1,6 @@
 from typing import Callable, List, Tuple
 
-from src.event_bus import Event
+from src.core.event_bus import Event
 from src.middleware.base_middleware import BaseMiddleware
 
 

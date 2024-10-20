@@ -1,6 +1,6 @@
 from typing import TypeVar, Type
 
-from src.event_bus import Event
+from src.core.event_bus import Event
 from src.services.orm_service import ORMService
 from src.services.password_service import PasswordService
 from src.services.template_service import TemplateService

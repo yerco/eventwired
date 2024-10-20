@@ -41,7 +41,8 @@ def register_routes(routing_service):
 
 ```python
 from src.controllers.base_controller import BaseController
-from src.event_bus import Event
+from src.core.event_bus import Event
+
 
 async def page_detail_controller(event: Event):
     controller = BaseController(event)

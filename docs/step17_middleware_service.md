@@ -24,7 +24,8 @@ The `MiddlewareService` is a core service that manages middleware execution in t
 ```python
 # src/services/middleware_service.py
 from typing import Callable, List
-from src.event_bus import Event
+from src.core.event_bus import Event
+
 
 class MiddlewareService:
     def __init__(self):
@@ -65,9 +66,11 @@ The MiddlewareService processes the middlewares in two phases:
 ## Middleware Example
 
 Here’s an example of a combined middleware that logs before and after the request:
+
 ```python
 # src/middleware/logging_middleware.py
-from src.event_bus import Event
+from src.core.event_bus import Event
+
 
 class LoggingMiddleware:
     async def before_request(self, event: Event) -> Event:

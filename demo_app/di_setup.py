@@ -1,7 +1,6 @@
 from src.core.setup_registry import di_setup
-from src.core.helpers import async_init
-from src.dicontainer import di_container
-from src.event_bus import EventBus
+from src.core.dicontainer import di_container
+from src.core.event_bus import EventBus
 from src.models.base import Base
 from src.services.orm_service import ORMService
 from src.services.form_service import FormService
@@ -49,7 +48,7 @@ async def setup_utility_service(container):
 @di_setup
 async def setup_event_bus(container):
     event_bus = EventBus()
-    register_subscribers(event_bus)
+    await register_subscribers(event_bus)
     di_container.register_singleton(event_bus, 'EventBus')
 
 @di_setup

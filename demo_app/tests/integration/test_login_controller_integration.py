@@ -1,10 +1,10 @@
 import pytest
 import tracemalloc
 import os
-from unittest.mock import AsyncMock, Mock, ANY
+from unittest.mock import AsyncMock, Mock
 
 from src.core.request import Request
-from src.event_bus import Event
+from src.core.event_bus import Event
 from src.core.setup_registry import run_setups
 
 from demo_app.controllers.login_controller import login_controller

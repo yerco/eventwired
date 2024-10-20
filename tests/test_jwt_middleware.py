@@ -1,9 +1,9 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock
 from jwt.exceptions import InvalidTokenError, ExpiredSignatureError
 
 from src.middleware.jwt_middleware import JWTMiddleware
-from src.event_bus import Event
+from src.core.event_bus import Event
 
 
 @pytest.fixture

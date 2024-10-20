@@ -1,7 +1,7 @@
 import traceback
 from typing import Any, Callable
 
-from src.event_bus import Event
+from src.core.event_bus import Event
 from src.core.request import Request
 
 

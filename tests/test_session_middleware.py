@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock
-from src.event_bus import Event
+from src.core.event_bus import Event
 from src.middleware.session_middleware import SessionMiddleware
 from src.core.session import Session
 

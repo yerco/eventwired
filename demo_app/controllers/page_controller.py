@@ -1,5 +1,5 @@
 from src.controllers.http_controller import HTTPController
-from src.event_bus import Event
+from src.core.event_bus import Event
 
 
 async def page_detail_controller(event: Event):

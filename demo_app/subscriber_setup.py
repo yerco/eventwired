@@ -8,7 +8,7 @@ from demo_app.subscribers.event_log_subscriber import log_event_to_db
 from demo_app.subscribers.error_subscribers import handle_404_event, handle_405_event, handle_500_event
 
 
-def register_subscribers(event_bus):
+async def register_subscribers(event_bus):
 
     event_bus.subscribe("http.request.completed", log_request_response)
 

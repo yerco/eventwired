@@ -1,6 +1,4 @@
-from typing import Optional
-
-from src.event_bus import Event
+from src.core.event_bus import Event
 from src.services.websocket_handler import WebSocketHandler
 
 

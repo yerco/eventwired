@@ -1,6 +1,6 @@
 from typing import Union, Optional, List, Tuple
 
-from src.event_bus import Event
+from src.core.event_bus import Event
 from src.core.response import Response
 from src.services.template_service import TemplateService
 

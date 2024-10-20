@@ -1,5 +1,5 @@
 import datetime
-from src.event_bus import Event
+from src.core.event_bus import Event
 
 # Dictionary to store request start times (could also use a more robust storage if needed)
 request_timing = {}

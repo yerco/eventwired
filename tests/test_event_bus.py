@@ -1,7 +1,7 @@
 import pytest
 from typing import Callable
 
-from src.event_bus import Event, EventBus
+from src.core.event_bus import Event, EventBus
 
 
 @pytest.mark.asyncio

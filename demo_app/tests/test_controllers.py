@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, Mock
 
-from src.event_bus import Event
+from src.core.event_bus import Event
 
 from demo_app.controllers.hello_controller import hello_controller
 from demo_app.di_setup import di_container

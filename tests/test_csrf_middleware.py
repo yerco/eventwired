@@ -3,7 +3,7 @@ import secrets
 from unittest.mock import AsyncMock
 
 from src.core.response import Response
-from src.event_bus import Event
+from src.core.event_bus import Event
 from src.middleware.csrf_middleware import CSRFMiddleware
 from src.core.session import Session
 

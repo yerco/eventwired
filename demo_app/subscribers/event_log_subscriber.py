@@ -1,4 +1,4 @@
-from src.event_bus import Event
+from src.core.event_bus import Event
 
 from demo_app.di_setup import di_container
 from demo_app.models.event_log import EventLog

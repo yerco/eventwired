@@ -5,8 +5,8 @@ from src.core.lifecycle import handle_lifespan_events
 from src.core.http_handler import handle_http_requests
 from src.core.request import Request
 from src.core.websocket import handle_websocket_connections
-from src.dicontainer import di_container
-from src.event_bus import Event
+from src.core.dicontainer import di_container
+from src.core.event_bus import Event
 
 
 class FrameworkApp:

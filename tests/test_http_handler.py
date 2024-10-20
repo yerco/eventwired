@@ -1,6 +1,6 @@
 import pytest
-from unittest.mock import AsyncMock, call
-from src.event_bus import Event
+from unittest.mock import AsyncMock
+from src.core.event_bus import Event
 from src.core.http_handler import handle_http_requests
 from src.services.middleware_service import MiddlewareService
 

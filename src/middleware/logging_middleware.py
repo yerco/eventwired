@@ -1,5 +1,5 @@
 from src.middleware.base_middleware import BaseMiddleware
-from src.event_bus import Event
+from src.core.event_bus import Event
 
 
 class LoggingMiddleware(BaseMiddleware):

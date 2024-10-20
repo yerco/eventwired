@@ -1,10 +1,10 @@
 from datetime import date
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, Mock, patch, ANY
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 from demo_app.forms.book_form import BookForm
-from src.event_bus import Event
+from src.core.event_bus import Event
 
 from demo_app.controllers.queries_books_controller import queries_books_controller
 from demo_app.models.book import Book

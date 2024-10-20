@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import AsyncMock, Mock, ANY
 
 from src.core.response import Response
-from src.event_bus import Event
+from src.core.event_bus import Event
 from src.controllers.http_controller import HTTPController
 
 from demo_app.controllers.login_controller import login_controller

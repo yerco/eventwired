@@ -1,8 +1,8 @@
 import pytest
-from unittest.mock import AsyncMock, create_autospec
+from unittest.mock import AsyncMock
 
 from src.core.session import Session
-from src.event_bus import Event
+from src.core.event_bus import Event
 from src.controllers.http_controller import HTTPController
 
 from demo_app.controllers.logout_controller import logout_controller

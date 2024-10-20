@@ -5,7 +5,7 @@ import aiohttp
 import logging
 
 from src.middleware.base_middleware import BaseMiddleware
-from src.event_bus import Event
+from src.core.event_bus import Event
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

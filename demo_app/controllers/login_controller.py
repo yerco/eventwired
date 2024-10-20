@@ -1,5 +1,5 @@
 from src.forms.login_form import LoginForm
-from src.event_bus import Event
+from src.core.event_bus import Event
 from src.controllers.http_controller import HTTPController
 from src.core.session import Session
 

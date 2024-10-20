@@ -1,4 +1,4 @@
-from src.event_bus import Event
+from src.core.event_bus import Event
 
 
 class PublisherService:

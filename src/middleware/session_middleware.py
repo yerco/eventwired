@@ -1,6 +1,4 @@
-import secrets
-
-from src.event_bus import Event
+from src.core.event_bus import Event
 from src.middleware.base_middleware import BaseMiddleware
 from src.services.session_service import SessionService
 from src.core.session import Session

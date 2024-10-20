@@ -1,5 +1,5 @@
 import datetime
-from src.event_bus import Event
+from src.core.event_bus import Event
 
 
 async def log_request_response(event: Event):

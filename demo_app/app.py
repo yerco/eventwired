@@ -1,5 +1,5 @@
 from src.core.framework_app import FrameworkApp
-from src.dicontainer import di_container
+from src.core.dicontainer import di_container
 from src.core.setup_registry import run_setups
 
 from demo_app.routes import register_routes

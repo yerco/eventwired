@@ -3,7 +3,7 @@ import time
 from aioresponses import aioresponses
 from unittest.mock import AsyncMock, patch
 
-from src.event_bus import Event
+from src.core.event_bus import Event
 
 from demo_app.middleware.ip_geolocation_middleware import IpGeolocationMiddleware, SimpleThrottler
 

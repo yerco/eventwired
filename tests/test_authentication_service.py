@@ -2,7 +2,7 @@ import pytest
 import re
 
 from unittest.mock import AsyncMock, MagicMock
-from src.event_bus import Event
+from src.core.event_bus import Event
 from src.services.config_service import ConfigService
 from src.services.orm_service import ORMService
 from src.services.security.authentication_service import AuthenticationService

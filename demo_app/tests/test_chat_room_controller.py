@@ -1,9 +1,8 @@
 import pytest
 from unittest.mock import AsyncMock, Mock
 from demo_app.controllers.chat_room_controller import chat_room_controller
-from src.event_bus import Event
+from src.core.event_bus import Event
 from src.services.websocket_service import WebSocketService
-from src.controllers.websocket_controller import WebSocketController
 
 
 @pytest.mark.asyncio

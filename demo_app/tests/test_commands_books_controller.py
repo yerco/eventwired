@@ -1,8 +1,8 @@
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock, ANY, Mock
+from unittest.mock import AsyncMock, patch, MagicMock, Mock
 from datetime import date
 
-from src.event_bus import Event
+from src.core.event_bus import Event
 
 from demo_app.controllers.commands_books_controller import commands_books_controller
 from demo_app.models.book import Book

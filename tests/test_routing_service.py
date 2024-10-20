@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 from src.services.routing_service import RoutingService
-from src.event_bus import Event, EventBus
+from src.core.event_bus import Event, EventBus
 from src.core.request import Request
 
 

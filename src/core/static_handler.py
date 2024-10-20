@@ -1,7 +1,7 @@
 import os
 from aiofiles import open as aio_open
 
-from src.event_bus import Event
+from src.core.event_bus import Event
 
 
 class StaticFilesHandler:

@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from src.dicontainer import DIContainer
+from src.core.dicontainer import DIContainer
 
 
 # Example service classes

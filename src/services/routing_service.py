@@ -4,7 +4,7 @@ import os
 from typing import Callable, Dict, Union, List, Optional
 
 from src.core.static_handler import StaticFilesHandler
-from src.event_bus import Event, EventBus
+from src.core.event_bus import Event, EventBus
 from src.services.config_service import ConfigService
 from src.services.jwt_service import JWTService
 from src.services.security.authentication_service import AuthenticationService
