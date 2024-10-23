@@ -11,6 +11,7 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=8000, help="The port to bind the server to (default: 8000)")
     parser.add_argument("--reload", action="store_true", help="Enable auto-reload on code changes (default: False)")
     parser.add_argument("--log-level", type=str, default="info", choices=["critical", "error", "warning", "info", "debug", "trace"], help="Set the log level for the server (default: info)")
+    parser.add_argument("--app", type=str, default="demo_app.app:app", help="The application to serve (default: demo_app.app:app)")
 
     args = parser.parse_args()
 
@@ -18,7 +19,7 @@ if __name__ == "__main__":
 
     # Run the ASGI server with the specified options
     asyncio.run(manager.run(
-        app="demo_app.app:app",
+        app=args.app,
         host=args.host,
         port=args.port,
         reload=args.reload,

@@ -35,11 +35,17 @@ A lightweight, async-first web framework built with modern web development in mi
 
    Currently, the server supports **Uvicorn**.
 
+   You can specify your own application to serve using the `--app` argument. If no application is provided, the default app `demo_app.app:app will be served.
+
    **Using Uvicorn:**
    ```bash
-   $ python run_server.py [--reload] [--host 127.0.0.1] [--port 8000]
+   $ python run_server.py [--app your_app:app] [--reload] [--host 127.0.0.1] [--port 8000]
    ```
-   
+   - `--app`: Optional. The path to your ASGI application (e.g., `your_app:app`). Defaults to `demo_app.app:app`.
+   - `--reload`: Optional. Enable auto-reload on code changes.
+   - `--host`: Optional. The host to bind the server to. Default is `127.0.0.1`.
+   - `--port`: Optional. The port to bind the server to. Default is `8000`.
+
    Visit the server at http://127.0.0.1:8000
 
 ## Testing
