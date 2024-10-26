@@ -3,13 +3,44 @@ import tracemalloc
 import os
 from unittest.mock import AsyncMock, Mock
 
+from demo_app.routes import register_routes
+from src.core.framework_app import FrameworkApp
 from src.core.request import Request
 from src.core.event_bus import Event
 from src.core.setup_registry import run_setups
+from src.test_utils.test_client import EWTestClient
 
 from demo_app.controllers.login_controller import login_controller
 from demo_app.models.user import User
 from demo_app.di_setup import di_container
+
+
+# Provides a test client with FrameworkApp
+@pytest.fixture
+async def test_client():
+    await run_setups(di_container)
+    routing_service = await di_container.get('RoutingService')
+    # Custom route registration logic for the user app
+    await register_routes(routing_service)
+    app = FrameworkApp()
+    return EWTestClient(app)
+
+
+@pytest.mark.asyncio
+async def test_framework_GET_root_http_request_needs_CSRF(test_client):
+    response = await test_client.get("/")
+    assert response.status_code == 200
+    print("response headers:", response.headers)
+    # Because at config.py 'ENABLE_CSRF': True, so the CSRF token should be generated
+    assert response.headers['X-CSRF-Token'] is not None
+    assert "EVENTWIRED" in response.body
+
+
+@pytest.mark.asyncio
+async def test_framework_POST_root_http_request(test_client):
+    response = await test_client.post("/")
+    assert response.status_code == 403  # Forbidden
+
 
 
 @pytest.mark.asyncio

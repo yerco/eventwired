@@ -21,6 +21,7 @@ class ConfigService:
             'DB_SESSION': None,
             'SESSION_EXPIRY_SECONDS': 3600,  # Default session expiry
             'USE_REDIS_FOR_CQRS': False,
+            'ENABLE_CSRF': False,
         })
 
     def _load_user_config(self, user_config: Dict[str, Any]):

@@ -88,10 +88,11 @@ async def setup_routing_service(container):
 # Middleware setup
 @di_setup
 async def setup_middleware(container):
+    config_service = await container.get('ConfigService')
     middleware_service = MiddlewareService()
     session_service = await container.get('SessionService')
     middleware_service.register_middleware(SessionMiddleware(session_service), priority=10)
-    csrf_middleware = CSRFMiddleware()
+    csrf_middleware = CSRFMiddleware(config_service=config_service)
     middleware_service.register_middleware(csrf_middleware, priority=5)  # lower priority than session middleware
     # middleware_service.register_middleware(IpGeolocationMiddleware(), priority=0)
     middleware_service.register_middleware(TimingMiddleware(), priority=1)

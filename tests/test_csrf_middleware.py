@@ -8,8 +8,16 @@ from src.middleware.csrf_middleware import CSRFMiddleware
 from src.core.session import Session
 
 
+# Fixture for config_service mock
+@pytest.fixture
+def config_service_mock():
+    return {
+        'ENABLE_CSRF': True,
+    }
+
+
 @pytest.mark.asyncio
-async def test_csrf_middleware_get_request_generates_token():
+async def test_csrf_middleware_get_request_generates_token(config_service_mock):
     # Step 1: Mock dependencies
     mock_event = Event(name='http.request.received', data={
         'request': AsyncMock(method='GET'),
@@ -17,7 +25,7 @@ async def test_csrf_middleware_get_request_generates_token():
     })
 
     # Step 2: Create the middleware instance
-    csrf_middleware = CSRFMiddleware()
+    csrf_middleware = CSRFMiddleware(config_service=config_service_mock)
 
     # Step 3: Call before_request method
     event = await csrf_middleware.before_request(mock_event)
@@ -29,7 +37,7 @@ async def test_csrf_middleware_get_request_generates_token():
 
 
 @pytest.mark.asyncio
-async def test_csrf_middleware_get_request_uses_existing_token():
+async def test_csrf_middleware_get_request_uses_existing_token(config_service_mock):
     # Step 1: Mock dependencies
     existing_token = secrets.token_hex(32)
     mock_event = Event(name='http.request.received', data={
@@ -38,7 +46,7 @@ async def test_csrf_middleware_get_request_uses_existing_token():
     })
 
     # Step 2: Create the middleware instance
-    csrf_middleware = CSRFMiddleware()
+    csrf_middleware = CSRFMiddleware(config_service=config_service_mock)
 
     # Step 3: Call before_request method
     event = await csrf_middleware.before_request(mock_event)
@@ -49,7 +57,7 @@ async def test_csrf_middleware_get_request_uses_existing_token():
 
 
 @pytest.mark.asyncio
-async def test_csrf_middleware_post_request_valid_token():
+async def test_csrf_middleware_post_request_valid_token(config_service_mock):
     # Step 1: Mock dependencies
     csrf_token = secrets.token_hex(32)
     mock_event = Event(name='http.request.received', data={
@@ -62,7 +70,7 @@ async def test_csrf_middleware_post_request_valid_token():
     mock_event.data['request'].headers = {'X-CSRF-Token': None}  # Add mock headers if needed
 
     # Step 2: Create the middleware instance
-    csrf_middleware = CSRFMiddleware()
+    csrf_middleware = CSRFMiddleware(config_service=config_service_mock)
 
     # Step 3: Call before_request method for POST request with valid CSRF token
     event = await csrf_middleware.before_request(mock_event)
@@ -72,7 +80,7 @@ async def test_csrf_middleware_post_request_valid_token():
 
 
 @pytest.mark.asyncio
-async def test_csrf_middleware_post_request_invalid_token_response():
+async def test_csrf_middleware_post_request_invalid_token_response(config_service_mock):
     # Step 1: Mock dependencies
     csrf_token = secrets.token_hex(32)
     mock_event = Event(name='http.request.received', data={
@@ -87,7 +95,7 @@ async def test_csrf_middleware_post_request_invalid_token_response():
     mock_event.data['request'].headers = {}
 
     # Step 2: Create the middleware instance
-    csrf_middleware = CSRFMiddleware()
+    csrf_middleware = CSRFMiddleware(config_service=config_service_mock)
 
     # Step 3: Call before_request method for POST request with invalid CSRF token
     updated_event = await csrf_middleware.before_request(mock_event)
@@ -101,7 +109,7 @@ async def test_csrf_middleware_post_request_invalid_token_response():
 
 
 @pytest.mark.asyncio
-async def test_csrf_middleware_post_request_valid_header_token():
+async def test_csrf_middleware_post_request_valid_header_token(config_service_mock):
     # Step 1: Mock dependencies
     csrf_token = secrets.token_hex(32)
     mock_event = Event(name='http.request.received', data={
@@ -113,10 +121,51 @@ async def test_csrf_middleware_post_request_valid_header_token():
     mock_event.data['request'].form = AsyncMock(return_value={})
 
     # Step 2: Create the middleware instance
-    csrf_middleware = CSRFMiddleware()
+    csrf_middleware = CSRFMiddleware(config_service=config_service_mock)
 
     # Step 3: Call before_request method with valid CSRF token in header
     event = await csrf_middleware.before_request(mock_event)
 
     # Step 4: Ensure no exception is raised (valid token from header)
     assert event is not None
+
+
+async def test_csrf_included_when_enabled_at_config(config_service_mock):
+    # Step 1: Mock dependencies
+    mock_event = Event(name='http.request.received', data={
+        'request': AsyncMock(method='GET'),
+        'session': Session('test-session-id', {})
+    })
+
+    # Step 2: Create the middleware instance
+    csrf_middleware = CSRFMiddleware(config_service=config_service_mock)
+
+    # Step 3: Call before_request method
+    event = await csrf_middleware.before_request(mock_event)
+
+    # Step 4: Check if the X-CSRF-Token header is included in the response headers
+    assert 'response_headers' in event.data
+    assert ('X-CSRF-Token', event.data['csrf_token']) in event.data['response_headers']
+
+
+async def test_csrf_not_included_when_disabled_at_config():
+    # Step 1: Mock dependencies
+    mock_event = Event(name='http.request.received', data={
+        'request': AsyncMock(method='GET'),
+        'session': Session('test-session-id', {})
+    })
+
+    # Mock config service with CSRF protection disabled
+    config_service_mock = {
+        'ENABLE_CSRF': False,
+    }
+
+    # Step 2: Create the middleware instance
+    csrf_middleware = CSRFMiddleware(config_service=config_service_mock)
+
+    # Step 3: Call before_request method
+    event = await csrf_middleware.before_request(mock_event)
+
+    # Step 4: Ensure the X-CSRF-Token header is not included in the response headers
+    assert 'response_headers' in event.data
+    assert ('X-CSRF-Token', event.data['csrf_token']) not in event.data['response_headers']

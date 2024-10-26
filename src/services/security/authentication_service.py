@@ -5,7 +5,7 @@ from src.services.orm_service import ORMService
 from src.services.password_service import PasswordService
 from src.services.template_service import TemplateService
 from src.core.response import Response
-from tests.test_di_container import ConfigService
+from src.services.config_service import ConfigService
 
 T = TypeVar('T')
 

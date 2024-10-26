@@ -1,10 +1,16 @@
 import secrets
+
+from src.core.event_bus import Event
 from src.middleware.base_middleware import BaseMiddleware
 from src.core.response import Response
+from src.services.config_service import ConfigService
 
 
 class CSRFMiddleware(BaseMiddleware):
-    async def before_request(self, event):
+    def __init__(self, config_service: ConfigService):
+        self.config_service = config_service
+
+    async def before_request(self, event: Event) -> Event:
         request = event.data['request']
         session = event.data.get('session')
 
@@ -19,6 +25,10 @@ class CSRFMiddleware(BaseMiddleware):
                 csrf_token = secrets.token_hex(32)  # Generate new CSRF token
                 session.set('csrf_token', csrf_token)  # Store CSRF token in session
             event.data['csrf_token'] = csrf_token  # Make token available for rendering
+            if 'response_headers' not in event.data:
+                event.data['response_headers'] = []
+            if self.config_service.get('ENABLE_CSRF'):
+                event.data['response_headers'].append(('X-CSRF-Token', csrf_token))
 
         # CSRF protection for unsafe HTTP methods (POST, PUT, DELETE)
         if request.method in ['POST', 'PUT', 'DELETE']:
@@ -38,6 +48,9 @@ class CSRFMiddleware(BaseMiddleware):
 
         return event
 
+    async def after_request(self, event):
+        return event
+
     # Handle CSRF failure and send a meaningful response to the user
     async def handle_csrf_failure(self, event):
         response = Response(
@@ -48,7 +61,4 @@ class CSRFMiddleware(BaseMiddleware):
 
         # Send the response to the client
         event.data['response'] = response
-        return event
-
-    async def after_request(self, event):
         return event
