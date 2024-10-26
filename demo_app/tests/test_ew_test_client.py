@@ -1,6 +1,5 @@
 import pytest
-from src.test_utils.test_client import EWTestClient, EWTestClientResponse
-from src.core.framework_app import FrameworkApp
+from src.test_utils.test_client import EWTestClient
 from typing import Callable
 
 

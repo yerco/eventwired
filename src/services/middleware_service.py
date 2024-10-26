@@ -36,10 +36,16 @@ class MiddlewareService:
         # Now, after all middlewares, send the response
         response = event.data.get('response')  # Fetch the response prepared by the controller
         if response:
+            # Collect headers to add without modifying `response.headers` directly in the loop
+            new_headers = []
             # Add response headers from the event data if available (including Set-Cookie)
             if 'response_headers' in event.data:
                 for header in event.data['response_headers']:
-                    response.headers.append(header)
+                    if header not in response.headers:  # Avoid duplicates
+                        new_headers.append(header)
+
+            # Extend response.headers outside the loop to prevent any modification conflicts
+            response.headers.extend(new_headers)
 
             # print(f"Final response headers: {response.headers}")
             # Finally, send the response
