@@ -3,13 +3,14 @@ from src.core.dicontainer import di_container
 from src.core.setup_registry import run_setups
 
 from demo_app.routes import register_routes
+from demo_app.config import config
 
 
 # Create the app, passing in the startup callback
 async def app(scope, receive, send):
     try:
         # Run setup functions to initialize services before processing any requests
-        await run_setups(di_container)
+        await run_setups(di_container, config)
         routing_service = await di_container.get('RoutingService')
         # Custom route registration logic for the user app
         await register_routes(routing_service)

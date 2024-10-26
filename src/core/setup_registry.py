@@ -9,7 +9,10 @@ def di_setup(func):
 
 # Run all setup functions registered with @di_setup.
 # This should be called during the app's startup phase.
-async def run_setups(container):
+async def run_setups(container, config=None):
     # Run all setup functions registered with @di_setup
     for setup_fn in setup_registry:
-        await setup_fn(container)
+        if config is not None:
+            await setup_fn(container, config=config)
+        else:
+            await setup_fn(container)

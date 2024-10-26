@@ -1,5 +1,4 @@
 import pytest
-import tracemalloc
 import os
 from unittest.mock import AsyncMock, Mock
 
@@ -18,7 +17,24 @@ from demo_app.di_setup import di_container
 # Provides a test client with FrameworkApp
 @pytest.fixture
 async def test_client():
-    await run_setups(di_container)
+    # Get three levels up from the current file’s directory
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    test_config = {
+        'BASE_DIR': base_dir,
+        'SECRET_KEY': 'supersecretkey',
+        "STATIC_DIR": "demo_app/static",  # User-defined static directory
+        "STATIC_URL_PATH": "/static",  # User-defined static URL path
+        'USE_REDIS_FOR_CQRS': False,
+        'SESSION_EXPIRY_SECONDS': 7200,  # Extend session expiry to 2 hours
+        'TEMPLATE_ENGINE': 'JinjaAdapter',
+        'TEMPLATE_DIR': os.path.join(base_dir, 'templates'),
+        'DATABASE_URL': 'sqlite+aiosqlite:///test_db.db',
+        'JWT_SECRET_KEY': 'my_secret_key',
+        'JWT_ALGORITHM': 'HS256',
+        'JWT_EXPIRATION_SECONDS': 7200,  # 2 hours expiration time
+        'ENABLE_CSRF': True,
+    }
+    await run_setups(di_container, config=test_config)
     routing_service = await di_container.get('RoutingService')
     # Custom route registration logic for the user app
     await register_routes(routing_service)
@@ -34,19 +50,31 @@ async def test_framework_GET_root_http_request_needs_CSRF(test_client):
     # Because at config.py 'ENABLE_CSRF': True, so the CSRF token should be generated
     assert response.headers['X-CSRF-Token'] is not None
     assert "EVENTWIRED" in response.body
+    if os.path.exists('test_db.db'):
+        os.remove('test_db.db')
 
 
 @pytest.mark.asyncio
 async def test_framework_POST_root_http_request(test_client):
     response = await test_client.post("/")
     assert response.status_code == 403  # Forbidden
-
+    if os.path.exists('test_db.db'):
+        os.remove('test_db.db')
 
 
 @pytest.mark.asyncio
 async def test_login_controller_get_integration():
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    test_config = {
+        'BASE_DIR': base_dir,
+        'TEMPLATE_DIR': os.path.join(base_dir, 'templates'),
+        'DATABASE_URL': 'sqlite+aiosqlite:///test_db.db',
+        'JWT_SECRET_KEY': 'my_secret_key',
+        'JWT_ALGORITHM': 'HS256',
+        'JWT_EXPIRATION_SECONDS': 7200,  # 2 hours expiration time
+    }
     # Set up the full DI container
-    await run_setups(di_container)
+    await run_setups(di_container, config=test_config)
 
     # Simulate an actual HTTP GET request for the login page
     event = Event(name='http.request.received', data={
@@ -63,12 +91,13 @@ async def test_login_controller_get_integration():
     assert response.status_code == 200
     assert "Login" in response.content
     assert response.content_type == 'text/html'
+    if os.path.exists('test_db.db'):
+        os.remove('test_db.db')
 
 
 # Not that 'integration' kind of test
 @pytest.mark.asyncio
 async def test_login_controller_post_success_full(monkeypatch):
-    tracemalloc.start()
     if os.path.exists('test_db.db'):
         os.remove('test_db.db')
 
@@ -152,7 +181,6 @@ async def test_login_controller_post_success_full(monkeypatch):
     assert "Login successful" in await response.content
     assert response.content_type == 'text/html'
 
-    tracemalloc.stop()
     # Clean up
     if os.path.exists('test_db.db'):
         os.remove('test_db.db')
@@ -160,8 +188,13 @@ async def test_login_controller_post_success_full(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_login_controller_invalid_method_integration():
-    # Set up the full DI container
-    await run_setups(di_container)
+    test_config = {
+        'DATABASE_URL': 'sqlite+aiosqlite:///test_db.db',
+        'JWT_SECRET_KEY': 'my_secret_key',
+        'JWT_ALGORITHM': 'HS256',
+        'JWT_EXPIRATION_SECONDS': 7200,  # 2 hours expiration time
+    }
+    await run_setups(di_container, config=test_config)
 
     # Simulate a request with an unsupported method (e.g., PUT)
     mock_request = Mock(method="PUT")
@@ -181,3 +214,6 @@ async def test_login_controller_invalid_method_integration():
     assert response.status_code == 405  # Method Not Allowed
     assert "Method Not Allowed" in response.content
     assert response.content_type == 'text/plain'
+
+    if os.path.exists('test_db.db'):
+        os.remove('test_db.db')
