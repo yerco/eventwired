@@ -8,7 +8,7 @@ if __name__ == "__main__":
     parser.add_argument("--host", type=str, default="127.0.0.1", help="The host to bind the server to (default: 127.0.0.1)")
     parser.add_argument("--port", type=int, default=8000, help="The port to bind the server to (default: 8000)")
     parser.add_argument("--reload", action="store_true", help="Enable auto-reload on code changes (default: False)")
-    parser.add_argument("--reload-dir", type=str, nargs="*", default=["."], help="Directories to watch for file changes (default: current directory)")
+    parser.add_argument("--reload_dir", type=str, nargs="*", default=["."], help="Directories to watch for file changes (default: current directory)")
     parser.add_argument("--log-level", type=str, default="info", choices=["critical", "error", "warning", "info", "debug", "trace"], help="Set the log level for the server (default: info)")
     parser.add_argument("--app", type=str, default="demo_app.app:app", help="The application to serve (default: demo_app.app:app)")
 
@@ -17,7 +17,12 @@ if __name__ == "__main__":
 
     # Graceful shutdown handling
     def handle_exit(sig, frame):
-        print(f"Received exit signal {sig.name}. Shutting down gracefully...")
+        try:
+            signal_name = signal.Signals(sig).name
+            print(f"Received exit signal {signal_name}. Shutting down gracefully...")
+        except ValueError:
+            print(f"Received exit signal {sig}. Shutting down gracefully...")
+
         exit(0)
 
     # Bind signal handling for graceful shutdown
