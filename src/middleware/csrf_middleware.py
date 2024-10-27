@@ -50,17 +50,19 @@ class CSRFMiddleware(BaseMiddleware):
 
     async def after_request(self, event):
         response: Response = event.data.get('response')
-        csrf_token = event.data.get('csrf_token')
+        # e.g. static
+        if response:
+            csrf_token = event.data.get('csrf_token')
 
-        # Set CSRF token as a cookie in the response
-        if csrf_token and self.config_service.get('ENABLE_CSRF'):
-            response.set_cookie(
-                name="csrftoken",
-                value=csrf_token,
-                path="/",
-                http_only=False,  # Allow JavaScript access
-                secure=True       # Set to True if using HTTPS
-            )
+            # Set CSRF token as a cookie in the response
+            if csrf_token and self.config_service.get('ENABLE_CSRF'):
+                response.set_cookie(
+                    name="csrftoken",
+                    value=csrf_token,
+                    path="/",
+                    http_only=False,  # Allow JavaScript access
+                    secure=True       # Set to True if using HTTPS
+                )
 
         return event
 
