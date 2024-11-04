@@ -18,7 +18,7 @@ class CSRFMiddleware(BaseMiddleware):
             if not csrf_token:
                 csrf_token = secrets.token_hex(32)  # Generate new CSRF token
                 session.set('csrf_token', csrf_token)  # Store CSRF token in session
-            event.data['response'].set_cookie('csrf_token', csrf_token)  # Set CSRF token as a cookie
+            event.data['request'].set_cookie('csrf_token', csrf_token)  # Set CSRF token as a cookie
 
         # CSRF protection for unsafe HTTP methods (POST, PUT, DELETE)
         if request.method in ['POST', 'PUT', 'DELETE']:
