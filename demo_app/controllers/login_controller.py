@@ -22,10 +22,13 @@ async def login_controller(event: Event):
     # Handle the GET request
     if http_method == "GET":
         # Render the login form (empty form initially)
+
+        # Retrieve CSRF token from cookies, set by the middleware
+        csrf_token = request.cookies.get('csrf_token', event.data.get('csrf_token'))
         context = {
             "form": LoginForm(),  # Pass an empty form
             "errors": {},  # Pass empty errors dictionary
-            "csrf_token": event.data.get('csrf_token'),  # Pass the CSRF token from the middleware
+            "csrf_token": csrf_token,  # Pass the CSRF token from the middleware
         }
         rendered_content = template_service.render_template('login.html', context)
         await controller.send_html(rendered_content)
