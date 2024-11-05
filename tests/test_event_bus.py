@@ -1,3 +1,4 @@
+import asyncio
 import pytest
 from typing import Callable
 
@@ -12,6 +13,7 @@ async def test_event_bus():
 
     async def mock_listener(event: Event):
         events_received.append(event)
+        await asyncio.sleep(0)  # No-op async checkpoint
 
     # Subscribe to the event
     event_bus.subscribe('http.request.received', mock_listener)
@@ -69,8 +71,9 @@ async def test_event_bus_publish():
     event_bus = EventBus()
     event_data = {'called': False}
 
-    def dummy_listener(event: Event):
+    async def dummy_listener(event: Event):
         event.data['called'] = True
+        await asyncio.sleep(0)  # No-op async checkpoint
 
     event_bus.subscribe('test.event', dummy_listener)
     await event_bus.publish(Event(name='test.event', data=event_data))
@@ -83,11 +86,13 @@ async def test_event_bus_multiple_listeners():
     event_bus = EventBus()
     call_count = {'count': 0}
 
-    def listener_one(event: Event):
+    async def listener_one(event: Event):
         call_count['count'] += 1
+        await asyncio.sleep(0)  # No-op async checkpoint
 
-    def listener_two(event: Event):
+    async def listener_two(event: Event):
         call_count['count'] += 1
+        await asyncio.sleep(0)  # No-op async checkpoint
 
     event_bus.subscribe('test.event', listener_one)
     event_bus.subscribe('test.event', listener_two)
@@ -113,8 +118,9 @@ async def test_event_bus_dynamic_listener_management():
     event_bus = EventBus()
     event_data = {'called': False}
 
-    def dynamic_listener(event: Event):
+    async def dynamic_listener(event: Event):
         event.data['called'] = True
+        await asyncio.sleep(0)  # No-op async checkpoint
 
     # Add listener
     event_bus.subscribe('test.event', dynamic_listener)
@@ -133,11 +139,12 @@ async def test_event_bus_listener_exception_handling():
     event_bus = EventBus()
     call_count = {'count': 0}
 
-    def faulty_listener(event: Event):
+    async def faulty_listener(event: Event):
         raise ValueError("An error occurred")
 
-    def safe_listener(event: Event):
+    async def safe_listener(event: Event):
         call_count['count'] += 1
+        await asyncio.sleep(0)  # No-op async checkpoint
 
     event_bus.subscribe('test.event', faulty_listener)
     event_bus.subscribe('test.event', safe_listener)
@@ -149,5 +156,3 @@ async def test_event_bus_listener_exception_handling():
 
     # Ensure the safe listener was still called despite the faulty listener
     assert call_count['count'] == 1
-
-

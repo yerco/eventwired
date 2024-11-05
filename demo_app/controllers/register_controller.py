@@ -19,10 +19,12 @@ async def register_controller(event: Event):
     http_method = request.method
 
     if http_method == "GET":
+        csrf_token = request.cookies.get('csrf_token', '')
         # Render the registration form template for GET requests
         context = {
             "form": RegisterForm(),
-            "errors": {}
+            "errors": {},
+            "csrf_token": csrf_token,
         }
         rendered_content = template_service.render_template('register.html', context)
         await controller.send_html(rendered_content)

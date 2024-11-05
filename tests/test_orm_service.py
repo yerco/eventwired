@@ -1,6 +1,5 @@
-import os
-
 import pytest
+from pathlib import Path  # Import trio for async path handling
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.orm import declarative_base
@@ -26,7 +25,7 @@ class ModelForTestingTwo(Base):
 @pytest.fixture(scope="session")
 async def orm_service():
     config_service = ConfigService()
-    db_file = 'a_default.db'
+    db_file = Path('a_default.db')  # Use trio.Path instead of os.path
     config_service.set('DATABASE_URL', f'sqlite+aiosqlite:///{db_file}')
     orm_service = ORMService(config_service, Base=Base)
     await orm_service.init()
@@ -35,8 +34,8 @@ async def orm_service():
     await orm_service.cleanup()
 
     # Ensure the database file is deleted after the tests
-    if os.path.exists(db_file):
-        os.remove(db_file)
+    if db_file.exists():  # Use async path check
+        db_file.unlink()  # Use async path deletion
 
 
 @pytest.fixture(autouse=True)
@@ -54,7 +53,9 @@ async def reset_db(orm_service):
 async def test_orm_service_initialization(orm_service):
     assert orm_service is not None, "ORMService should be initialized."
     assert isinstance(orm_service.engine, AsyncEngine), "ORMService engine should be an AsyncEngine."
-    assert os.path.exists('a_default.db'), "Database file should be created after table creation."
+
+    db_file = Path('a_default.db')
+    assert db_file.exists(), "Database file should be created after table creation."  # async check for existence
 
 
 @pytest.mark.asyncio

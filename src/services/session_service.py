@@ -20,7 +20,7 @@ class SessionService:
         session = await self.orm_service.get(SessionModel, lookup_value=session_id, lookup_column="session_id")
         if session:
             # Check if the session has expired
-            if session.expires_at and session.expires_at < datetime.datetime.utcnow():
+            if session.expires_at and session.expires_at < datetime.datetime.now(datetime.timezone.utc):
                 # Session has expired; delete it and return an empty session
                 await self.orm_service.delete(SessionModel, session_id)
                 return {}
@@ -31,11 +31,12 @@ class SessionService:
     async def save_session(self, session_id: str, session_data: dict) -> None:
         session_data_serialized = json.dumps(session_data)  # Serialize session data for storage
         session_duration = self.config_service.get("SESSION_EXPIRY_SECONDS", 3600)
-        expires_at = datetime.datetime.utcnow() + datetime.timedelta(seconds=session_duration)
+        expires_at = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=session_duration)
 
         # Check if session already exists
         session = await self.orm_service.get(SessionModel, lookup_value=session_id, lookup_column="session_id")
 
+        current_time = datetime.datetime.now(datetime.timezone.utc)  # Get the current UTC time once for consistency
         if session:
             # Update existing session
             await self.orm_service.update(
@@ -44,7 +45,7 @@ class SessionService:
                 lookup_column="session_id",
                 session_data=session_data_serialized,
                 expires_at=expires_at,
-                updated_at=datetime.datetime.utcnow()
+                updated_at=current_time
             )
         else:
             # Create a new session
@@ -52,8 +53,8 @@ class SessionService:
                 SessionModel,
                 session_id=session_id,
                 session_data=session_data_serialized,
-                created_at=datetime.datetime.utcnow(),
-                updated_at=datetime.datetime.utcnow(),
+                created_at=current_time,
+                updated_at=current_time,
                 expires_at=expires_at
             )
 

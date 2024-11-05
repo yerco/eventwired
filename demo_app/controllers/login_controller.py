@@ -23,8 +23,8 @@ async def login_controller(event: Event):
     if http_method == "GET":
         # Render the login form (empty form initially)
 
-        # Retrieve CSRF token from cookies, set by the middleware
-        csrf_token = request.cookies.get('csrf_token', '')
+        # Retrieve CSRF that was set in the middleware
+        csrf_token = request.csrf_token
         context = {
             "form": LoginForm(),  # Pass an empty form
             "errors": {},  # Pass empty errors dictionary

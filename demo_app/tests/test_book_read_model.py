@@ -14,6 +14,7 @@ async def redis_service():
     service = RedisService(redis_client=fake_redis)
     yield service
     await fake_redis.aclose()  # Use aclose() to properly close the connection
+    await fake_redis.connection_pool.disconnect()  # Ensure all connections are closed
 
 
 # Fixture to create a BookReadModel instance

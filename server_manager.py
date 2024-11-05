@@ -1,4 +1,3 @@
-import signal
 import uvicorn
 import asyncio
 
@@ -11,41 +10,18 @@ class ServerManager:
         self.server = None
         self.should_exit = asyncio.Event()
 
-    async def run(self, app: str, host: str = '127.0.0.1', port: int = 8000, reload: bool = True, log_level: str = "info"):
+    def run(self, app: str, host: str = '127.0.0.1', port: int = 8000, reload: bool = True, reload_dirs=None, log_level: str = "info"):
         if self.server_type == 'uvicorn':
-            await self.run_uvicorn(app, host, port, reload, log_level)
+            if reload_dirs is None:
+                reload_dirs = ["."]
+            print(f"Reload is set to {reload}, watching directories: {reload_dirs}")
+            uvicorn.run(
+                app,
+                host=host,
+                port=port,
+                reload=reload,
+                reload_dirs=reload_dirs,
+                log_level=log_level
+            )
         else:
             raise ValueError(f"Unsupported server type: {self.server_type}")
-
-    async def run_uvicorn(self, app: str, host: str, port: int, reload: bool, log_level: str):
-        config = uvicorn.Config(app, host=host, port=port, reload=reload, log_level=log_level)
-        self.server = uvicorn.Server(config)
-
-        # Set up signal handlers
-        loop = asyncio.get_running_loop()
-        for sig in (signal.SIGINT, signal.SIGTERM):
-            loop.add_signal_handler(sig, self.handle_exit)
-
-        print(f"Starting Uvicorn with log level {log_level}")
-
-        try:
-            # Start the server in a separate task
-            server_task = asyncio.create_task(self.server.serve())
-            shutdown_task = asyncio.create_task(self.should_exit.wait())  # Create a task for the shutdown event
-
-            # Wait for either server completion or shutdown signal
-            done, pending = await asyncio.wait([server_task, shutdown_task], return_when=asyncio.FIRST_COMPLETED)
-
-            # If the server task is still pending, trigger the shutdown
-            if server_task in pending:
-                self.server.should_exit = True
-                await server_task
-
-        except SystemExit as e:
-            print(f"Server shutting down gracefully with exit code: {e.code}")
-        except Exception as e:
-            print(f"An unexpected error occurred during shutdown: {e}")
-
-    def handle_exit(self):
-        print(f"Received exit signal")
-        self.should_exit.set()

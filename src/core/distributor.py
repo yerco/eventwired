@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Callable
 
 from src.services.config_service import ConfigService
@@ -32,7 +32,7 @@ class Distributor:
         return event.handled
 
     def prune_old_events(self):
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         keys_to_delete = []
 
         for event_id, event in self.handled_events.items():

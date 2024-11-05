@@ -29,6 +29,27 @@ class Request:
             self._headers = {k.decode(): v.decode() for k, v in self.scope['headers']}
         return self._headers
 
+    # Retrieve a specific header, returning default if not found
+    def get_header(self, key, default=None):
+        return self.headers.get(key.lower(), default)
+
+    # Add a header to the request headers dictionary
+    def add_header(self, key, value):
+        # Ensure headers are initialized
+        if self._headers is None:
+            self._headers = {k.decode(): v.decode() for k, v in self.scope['headers']}
+
+        # Add or overwrite the header
+        self._headers[key.lower()] = value
+
+    @property
+    def csrf_token(self):
+        return self.get_header('csrf_token')
+
+    @csrf_token.setter
+    def csrf_token(self, value):
+        self.add_header('csrf_token', value)
+
     @property
     def query_string(self):
         return self.scope.get('query_string', b'')

@@ -48,7 +48,6 @@ async def test_login_controller_get_one(monkeypatch):
     event = Event(name='http.request.received', data={
         'request': mock_request,
         'send': mock_send,  # Mocked send function for HTTPController
-        'csrf_token': 'test_token'
     })
 
     # Call the login_controller
@@ -58,7 +57,7 @@ async def test_login_controller_get_one(monkeypatch):
     mock_template_service.render_template.assert_called_once_with('login.html', {
         "form": ANY,  # Bypass the memory address comparison for the form
         "errors": {},
-        "csrf_token": "test_token"
+        "csrf_token": event.data['request'].csrf_token
     })
 
     # Ensure the response was sent
@@ -103,15 +102,15 @@ async def test_login_controller_get_two(monkeypatch):
     monkeypatch.setattr(HTTPController, 'send_response', mock_send_response)
 
     # Mock request with GET method
-    mock_request = AsyncMock()
+    mock_request = Mock()
     mock_request.method = "GET"
+    monkeypatch.setattr(mock_request, 'csrf_token', "test_token")  # Directly set csrf_token value
     mock_send = AsyncMock()
 
     # Create the event object and include the 'send' key
     event = Event(name='http.request.received', data={
         'request': mock_request,
         'send': mock_send,  # Mocked send function for HTTPController
-        'csrf_token': 'test_token'
     })
 
     # Call the login_controller

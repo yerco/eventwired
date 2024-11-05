@@ -1,4 +1,5 @@
 import pytest
+import asyncio  # Import asyncio for the async checkpoint
 from unittest.mock import AsyncMock
 from src.core.request import Request
 
@@ -16,6 +17,7 @@ async def test_request_method_and_path():
 
     assert request.method == 'POST'
     assert request.path == '/test'
+    await asyncio.sleep(0)  # Async checkpoint
 
 
 # Test for headers property
@@ -30,6 +32,7 @@ async def test_request_headers():
     request = Request(scope, AsyncMock())
 
     assert request.headers == {'host': 'localhost', 'user-agent': 'test-agent'}
+    await asyncio.sleep(0)  # Async checkpoint
 
 
 # Test for query_params property
@@ -44,6 +47,7 @@ async def test_request_query_params():
     request = Request(scope, AsyncMock())
 
     assert request.query_params == {'name': ['john'], 'age': ['30']}
+    await asyncio.sleep(0)  # Async checkpoint
 
 
 # Test for body() method
@@ -116,6 +120,7 @@ async def test_request_client():
     request = Request(scope, AsyncMock())
 
     assert request.client == ('127.0.0.1', 8000)
+    await asyncio.sleep(0)  # Async checkpoint
 
 
 # Test for scheme property
@@ -131,6 +136,7 @@ async def test_request_scheme():
     request = Request(scope, AsyncMock())
 
     assert request.scheme == 'https'
+    await asyncio.sleep(0)  # Async checkpoint
 
 
 # Test for cookies property
@@ -145,3 +151,4 @@ async def test_request_cookies():
     request = Request(scope, AsyncMock())
 
     assert request.cookies == {'name': 'john', 'age': '30'}
+    await asyncio.sleep(0)  # Async checkpoint

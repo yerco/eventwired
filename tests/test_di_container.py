@@ -111,14 +111,8 @@ async def test_auto_wiring(di_container):
 @pytest.mark.asyncio
 async def test_service_not_found(di_container):
     di_container.reset()
-    try:
+    with pytest.raises(Exception, match="Service NonExistentService not found"):
         await di_container.get('NonExistentService')
-    except Exception as e:
-        assert "Service NonExistentService not found" in str(e)
-    else:
-        # Add a temporary bypass to investigate later if no exception was raised
-        print("No exception was raised; passing test temporarily.")
-        assert True is True  # Temporary assertion to pass the test
 
 
 # Test for complex dependency graph with multiple services

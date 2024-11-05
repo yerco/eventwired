@@ -4,6 +4,21 @@ from src.core.event_bus import Event
 from demo_app.di_setup import di_container
 
 
+async def handle_403_event(event: Event):
+    request = event.data['request']
+    send = event.data['send']
+    error_page = f"<html><body><h1>USER SIDE YASGI 403 Forbidden: {request.path}</h1></body></html>"
+    await send({
+        'type': 'http.response.start',
+        'status': 405,
+        'headers': [[b'content-type', b'text/html']],
+    })
+    await send({
+        'type': 'http.response.body',
+        'body': error_page.encode(),
+    })
+
+
 async def handle_404_event(event: Event):
     template_service = await di_container.get('TemplateService')
     request: Request = event.data['request']

@@ -91,7 +91,8 @@ async def setup_middleware(container):
     middleware_service = MiddlewareService()
     session_service = await container.get('SessionService')
     middleware_service.register_middleware(SessionMiddleware(session_service), priority=10)
-    csrf_middleware = CSRFMiddleware()
+    event_bus = await container.get('EventBus')
+    csrf_middleware = CSRFMiddleware(event_bus=event_bus)
     middleware_service.register_middleware(csrf_middleware, priority=5)  # lower priority than session middleware
     # middleware_service.register_middleware(IpGeolocationMiddleware(), priority=0)
     middleware_service.register_middleware(TimingMiddleware(), priority=1)

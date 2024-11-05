@@ -2,7 +2,7 @@ import asyncio
 import hashlib
 import json
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Callable, Dict, List, Union, Awaitable, Any, Coroutine
 
 
@@ -10,7 +10,7 @@ class Event:
     def __init__(self, name: str, data: Dict = None):
         self.name = name
         self.data = data or {}
-        self.timestamp = datetime.utcnow()
+        self.timestamp = datetime.now(timezone.utc)
 
     def __hash__(self):
         # Convert the event's data to a JSON string and hash it with its name

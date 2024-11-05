@@ -1,5 +1,5 @@
 import pytest
-import datetime
+from datetime import datetime, timezone, timedelta
 from unittest.mock import AsyncMock
 
 from src.services.session_service import SessionService
@@ -12,7 +12,7 @@ async def test_load_existing_session():
     mock_orm_service = AsyncMock()
     mock_config_service = AsyncMock()
     mock_session_data = '{"user_id": 123}'  # Simulated session data from DB
-    mock_expiration = datetime.datetime.utcnow() + datetime.timedelta(hours=1)  # Valid expiration time
+    mock_expiration = datetime.now(timezone.utc) + timedelta(hours=1)  # Valid expiration time
     mock_config_service.get.return_value = 3600  # 1 hour in seconds
 
     # Step 2: Mock ORM service to return a session when queried
@@ -75,7 +75,7 @@ async def test_load_expired_session():
     mock_orm_service = AsyncMock()
     mock_config_service = AsyncMock()
     mock_session_data = '{"user_id": 123}'  # Simulated session data from DB
-    mock_expiration = datetime.datetime.utcnow() - datetime.timedelta(hours=1)  # Expired session
+    mock_expiration = datetime.now(timezone.utc) - timedelta(hours=1)  # Expired session
 
     # Step 2: Mock ORM service to return an expired session
     mock_session = AsyncMock()
@@ -120,7 +120,7 @@ async def test_save_new_session():
     # Step 6: Check if the expiration time is correctly set
     args, kwargs = mock_orm_service.create.call_args
     assert "expires_at" in kwargs
-    assert kwargs["expires_at"] > datetime.datetime.utcnow()
+    assert kwargs["expires_at"] > datetime.now(timezone.utc)  # Make comparison offset-aware
 
     # Ensure ORM service did not update (because it's a new session)
     mock_orm_service.update.assert_not_called()
@@ -151,7 +151,7 @@ async def test_save_existing_session():
     # Step 6: Check if the expiration time is updated correctly
     args, kwargs = mock_orm_service.update.call_args
     assert "expires_at" in kwargs
-    assert kwargs["expires_at"] > datetime.datetime.utcnow()
+    assert kwargs["expires_at"] > datetime.now(timezone.utc)
 
     # Ensure ORM service did not create a new session
     mock_orm_service.create.assert_not_called()
