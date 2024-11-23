@@ -11,6 +11,7 @@ from src.services.middleware_service import MiddlewareService
 async def test_send_response_with_middleware(monkeypatch):
     # Step 1: Mock the send function
     mock_send = AsyncMock()
+    mock_event_bus = AsyncMock()
 
     # Step 2: Create an event with the mock send function in the data
     event = Event(name='test_event', data={'send': mock_send})
@@ -32,7 +33,7 @@ async def test_send_response_with_middleware(monkeypatch):
     assert event.data['response'] == response
 
     # Step 8: Simulate middleware service to execute and handle the response sending
-    middleware_service = MiddlewareService()
+    middleware_service = MiddlewareService(event_bus=mock_event_bus)
 
     # Call the middleware execute function to simulate full flow, and pass a simple handler
     async def mock_handler(ev):

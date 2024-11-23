@@ -40,6 +40,8 @@ class AuthenticationService:
                 response.headers.append((b'X-Content-Type-Options', b'nosniff'))
                 response.headers.append((b'X-Frame-Options', b'DENY'))
 
+                event.data['response_already_sent'] = True
+
                 # Send the response
                 await response.send(send)
         except Exception:  # TemplateNotFoundError:

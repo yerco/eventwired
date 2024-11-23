@@ -1,22 +1,29 @@
 import pytest
 from datetime import datetime, timezone, timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 from src.services.session_service import SessionService
 from src.models.session import Session as SessionModel
+
+
+# Utility to ensure a value is returned as if awaited
+def awaitable_return(value):
+    async def inner():
+        return value
+    return inner()
 
 
 @pytest.mark.asyncio
 async def test_load_existing_session():
     # Step 1: Mock dependencies
     mock_orm_service = AsyncMock()
-    mock_config_service = AsyncMock()
+    mock_config_service = Mock()
     mock_session_data = '{"user_id": 123}'  # Simulated session data from DB
     mock_expiration = datetime.now(timezone.utc) + timedelta(hours=1)  # Valid expiration time
     mock_config_service.get.return_value = 3600  # 1 hour in seconds
 
     # Step 2: Mock ORM service to return a session when queried
-    mock_session = AsyncMock()
+    mock_session = Mock()
     mock_session.session_data = mock_session_data
     mock_session.expires_at = mock_expiration
     mock_orm_service.get.return_value = mock_session
@@ -36,7 +43,7 @@ async def test_load_existing_session():
 async def test_load_nonexistent_session():
     # Step 1: Mock dependencies
     mock_orm_service = AsyncMock()
-    mock_config_service = AsyncMock()
+    mock_config_service = Mock()
 
     # Step 2: Mock ORM service to return None (no session found)
     mock_orm_service.get.return_value = None
@@ -56,7 +63,7 @@ async def test_load_nonexistent_session():
 async def test_load_session_no_session_id():
     # Step 1: Mock dependencies
     mock_orm_service = AsyncMock()
-    mock_config_service = AsyncMock()
+    mock_config_service = Mock()
 
     # Step 2: Create the session service instance
     session_service = SessionService(orm_service=mock_orm_service, config_service=mock_config_service)
@@ -73,12 +80,12 @@ async def test_load_session_no_session_id():
 async def test_load_expired_session():
     # Step 1: Mock dependencies
     mock_orm_service = AsyncMock()
-    mock_config_service = AsyncMock()
+    mock_config_service = Mock()
     mock_session_data = '{"user_id": 123}'  # Simulated session data from DB
     mock_expiration = datetime.now(timezone.utc) - timedelta(hours=1)  # Expired session
 
     # Step 2: Mock ORM service to return an expired session
-    mock_session = AsyncMock()
+    mock_session = Mock()
     mock_session.session_data = mock_session_data
     mock_session.expires_at = mock_expiration
     mock_orm_service.get.return_value = mock_session
@@ -98,7 +105,7 @@ async def test_load_expired_session():
 async def test_save_new_session():
     # Step 1: Mock dependencies
     mock_orm_service = AsyncMock()
-    mock_config_service = AsyncMock()  # Mock config service
+    mock_config_service = Mock()  # Mock config service
     mock_config_service.get = lambda key, default: 3600  # Return 3600 seconds directly
 
     # Step 2: Mock the ORM service to return None (no session exists with this session_id)
@@ -130,7 +137,7 @@ async def test_save_new_session():
 async def test_save_existing_session():
     # Step 1: Mock dependencies
     mock_orm_service = AsyncMock()
-    mock_config_service = AsyncMock()  # Mock config service
+    mock_config_service = Mock()  # Mock config service
     mock_config_service.get = lambda key, default: 3600  # Return 3600 seconds directly
 
     mock_config_service.get.return_value = 3600  # 1 hour
@@ -161,7 +168,7 @@ async def test_save_existing_session():
 async def test_delete_session():
     # Step 1: Mock dependencies
     mock_orm_service = AsyncMock()
-    mock_config_service = AsyncMock()  # Mock config service
+    mock_config_service = Mock()  # Mock config service
 
     # Step 2: Create the session service instance
     session_service = SessionService(orm_service=mock_orm_service, config_service=mock_config_service)
@@ -171,3 +178,51 @@ async def test_delete_session():
 
     # Step 4: Ensure ORM service was called to delete the session using the correct parameter
     mock_orm_service.delete.assert_called_once_with(SessionModel, lookup_value="session-id-to-delete", lookup_column="session_id")
+
+
+@pytest.mark.asyncio
+async def test_load_corrupted_session():
+    mock_orm_service = AsyncMock()
+    mock_config_service = Mock()
+    mock_session = Mock()
+    mock_session.session_data = "corrupted data"
+    mock_session.expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+    mock_orm_service.get.return_value = mock_session
+
+    session_service = SessionService(orm_service=mock_orm_service, config_service=mock_config_service)
+
+    result = await session_service.load_session("valid-session-id-with-corrupted-data")
+    assert result == {}
+
+
+@pytest.mark.asyncio
+async def test_load_expired_session_no_deletion():
+    mock_orm_service = AsyncMock()
+    mock_config_service = Mock()
+    mock_config_service.get.side_effect = lambda key, default: False if key == "DELETE_EXPIRED_SESSIONS" else default
+    mock_session = Mock()
+    mock_session.session_data = '{"user_id": 123}'
+    mock_session.expires_at = datetime.now(timezone.utc) - timedelta(hours=1)
+    mock_orm_service.get.return_value = mock_session
+
+    session_service = SessionService(orm_service=mock_orm_service, config_service=mock_config_service)
+
+    result = await session_service.load_session("expired-session-id")
+    assert result == {}
+    mock_orm_service.delete.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_load_session_without_expiration():
+    mock_orm_service = AsyncMock()
+    mock_config_service = Mock()
+    mock_session = Mock()
+    mock_session.session_data = '{"user_id": 123}'
+    mock_session.expires_at = None  # No expiration
+    mock_orm_service.get.return_value = mock_session
+
+    session_service = SessionService(orm_service=mock_orm_service, config_service=mock_config_service)
+
+    result = await session_service.load_session("no-expiration-session-id")
+    assert result == {"user_id": 123}
+

@@ -21,6 +21,9 @@ class ConfigService:
             'DB_SESSION': None,
             'SESSION_EXPIRY_SECONDS': 3600,  # Default session expiry
             'USE_REDIS_FOR_CQRS': False,
+            'DELETE_EXPIRED_SESSIONS': False,
+            'CSRF_REDIRECT_ON_FAILURE': False,
+            'ENVIRONMENT': 'development',
         })
 
     def _load_user_config(self, user_config: Dict[str, Any]):

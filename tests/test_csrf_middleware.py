@@ -1,6 +1,6 @@
 import pytest
 import secrets
-from unittest.mock import AsyncMock, mock_open
+from unittest.mock import AsyncMock, Mock
 
 from src.core.response import Response
 from src.core.event_bus import Event
@@ -16,9 +16,10 @@ async def test_csrf_middleware_get_request_generates_token_linked_with_session()
         'session': Session('test-session-id', {})
     })
     mock_event_bus = AsyncMock()
+    mock_config_service = Mock()
 
     # Step 2: Create the middleware instance
-    csrf_middleware = CSRFMiddleware(event_bus=mock_event_bus)
+    csrf_middleware = CSRFMiddleware(event_bus=mock_event_bus, config_service=mock_config_service)
 
     # Step 3: Call before_request method
     event = await csrf_middleware.before_request(mock_event)
@@ -38,9 +39,10 @@ async def test_csrf_middleware_get_request_uses_existing_token():
         'session': Session('test-session-id', {'csrf_token': existing_token})
     })
     mock_event_bus = AsyncMock()
+    mock_config_service = Mock()
 
     # Step 2: Create the middleware instance
-    csrf_middleware = CSRFMiddleware(event_bus=mock_event_bus)
+    csrf_middleware = CSRFMiddleware(event_bus=mock_event_bus, config_service=mock_config_service)
 
     # Step 3: Call before_request method
     event = await csrf_middleware.before_request(mock_event)
@@ -59,12 +61,13 @@ async def test_csrf_middleware_post_request_valid_token():
         'session': Session('test-session-id', {'csrf_token': csrf_token})
     })
     mock_event_bus = AsyncMock()
+    mock_config_service = Mock()
     # Mock form data with the CSRF token
     mock_event.data['request'].form = AsyncMock(return_value={'csrf_token': csrf_token})
     mock_event.data['request'].headers = {'X-CSRF-Token': None}  # Add mock headers if needed
 
     # Step 2: Create the middleware instance
-    csrf_middleware = CSRFMiddleware(event_bus=mock_event_bus)
+    csrf_middleware = CSRFMiddleware(event_bus=mock_event_bus, config_service=mock_config_service)
 
     # Step 3: Call before_request method for POST request with valid CSRF token
     event = await csrf_middleware.before_request(mock_event)
@@ -81,6 +84,7 @@ async def test_csrf_middleware_post_request_invalid_token_response():
         'request': AsyncMock(method='POST'),
         'session': Session('test-session-id', {'csrf_token': csrf_token})
     })
+    mock_config_service = Mock()
 
     # Mock form data with a different invalid CSRF token and make sure form() is an async mock
     mock_event.data['request'].form = AsyncMock(return_value={'csrf_token': 'invalid-token'})
@@ -90,7 +94,7 @@ async def test_csrf_middleware_post_request_invalid_token_response():
     mock_event_bus = AsyncMock()
 
     # Step 2: Create the middleware instance
-    csrf_middleware = CSRFMiddleware(event_bus=mock_event_bus)
+    csrf_middleware = CSRFMiddleware(event_bus=mock_event_bus, config_service=mock_config_service)
 
     # Step 3: Call before_request method for POST request with invalid CSRF token
     await csrf_middleware.before_request(mock_event)
@@ -100,7 +104,7 @@ async def test_csrf_middleware_post_request_invalid_token_response():
     published_event = mock_event_bus.publish.call_args[0][0]  # Retrieve the published event
 
     # Verify that the published event has the correct name and contains a 403 response
-    assert published_event.name == "http.error.403"
+    assert published_event.name == "http.error.no_csrf"
 
 
 @pytest.mark.asyncio
@@ -116,9 +120,10 @@ async def test_csrf_middleware_post_request_valid_header_token():
     mock_event.data['request'].form = AsyncMock(return_value={})
 
     mock_event_bus = AsyncMock()
+    mock_config_service = Mock()
 
     # Step 2: Create the middleware instance
-    csrf_middleware = CSRFMiddleware(event_bus=mock_event_bus)
+    csrf_middleware = CSRFMiddleware(event_bus=mock_event_bus, config_service=mock_config_service)
 
     # Step 3: Call before_request method with valid CSRF token in header
     event = await csrf_middleware.before_request(mock_event)

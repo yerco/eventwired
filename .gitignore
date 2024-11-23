@@ -1,6 +1,6 @@
 .idea
 venv
-eventwired.iml
+eventwired*
 **/__pycache__/
 htmlcov
 .coverage

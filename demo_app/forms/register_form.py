@@ -1,8 +1,10 @@
 from src.services.form_service import BaseForm, TextField, PasswordField
 
+from demo_app.validators.username_validators import UsernameValidator
+
 
 class RegisterForm(BaseForm):
-    username = TextField(required=True)
+    username = TextField(required=True, validators=[UsernameValidator()])
     password = PasswordField(required=True)
     confirm_password = PasswordField(required=True)
 

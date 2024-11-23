@@ -1,17 +1,20 @@
 from src.core.event_bus import Event
+from src.core.response import Response
 from src.middleware.base_middleware import BaseMiddleware
+from src.services.config_service import ConfigService
 from src.services.session_service import SessionService
 from src.core.session import Session
 
 
-class SessionMiddleware(BaseMiddleware):
-    def __init__(self, session_service: SessionService):
+class BrowserSessionMiddleware(BaseMiddleware):
+    def __init__(self, session_service: SessionService, config_service: ConfigService):
         self.session_service = session_service
+        self.config_service = config_service
 
     async def before_request(self, event: Event) -> Event:
         # Extract the session ID from the cookie (or header) in the request
         request = event.data['request']
-        session_id = request.cookies.get('session_id')  # Using cookies here, adjust for your framework
+        session_id = request.cookies.get('session_id')  # Using cookies here
 
         if session_id:  # If a session ID exists in the cookies, load the session
             session_data = await self.session_service.load_session(session_id)
@@ -41,13 +44,25 @@ class SessionMiddleware(BaseMiddleware):
 
         # Optionally set a new session ID in the response headers (if the session was newly created)
         if 'set_session_id' in event.data:
-            if 'response_headers' not in event.data:
-                event.data['response_headers'] = []
+            response: Response = event.data.get('response')
+            if not response:
+                # If no response object is available, create one for setting the cookie
+                # TODO emit event?
+                response = Response(content="", status_code=200)  # Adjust status/content as needed
+                event.data['response'] = response
 
-            session_id = session.session_id
-            # print(f"Setting session cookie with ID: {session_id}")
-            event.data['response_headers'].append((
-                'Set-Cookie', f'session_id={session.session_id}; Path=/; HttpOnly; Secure; SameSite=Strict'))
-            # print(f"Set-Cookie header added with session_id: {session.session_id}")
+
+            # Determine environment-specific cookie settings
+            is_production = self.config_service.get('ENVIRONMENT') == 'production'
+
+            # Set the session cookie using the Response's set_cookie method
+            response.set_cookie(
+                name="session_id",
+                value=session.session_id,
+                path="/",
+                http_only=is_production,  # Use HttpOnly in production
+                secure=is_production,      # Use Secure flag for HTTPS in production
+                same_site= "None" if is_production else "",  # Cross-origin in production
+            )
 
         return event

@@ -1,6 +1,7 @@
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Tuple, Union
+from http.cookies import SimpleCookie
 
 
 class Response:
@@ -17,7 +18,7 @@ class Response:
             self.content_type = 'application/json'
             self.body = json.dumps(self.content).encode()
         elif isinstance(self.content, str):
-            self.body = self.content.encode()
+            self.body = self.content.encode('utf-8')
         elif isinstance(self.content, bytes):
             self.body = self.content
         else:
@@ -47,7 +48,7 @@ class Response:
         })
 
     def set_cookie(self, name: str, value: str, path: str = '/', http_only: bool = True,
-                   expires: Union[str, int, datetime, None] = None, secure: bool = True):
+                   expires: Union[str, int, datetime, None] = None, secure: bool = True, same_site: str = 'Lax'):
         cookie_value = f"{name}={value}; Path={path}"
         if http_only:
             cookie_value += "; HttpOnly"
@@ -55,7 +56,19 @@ class Response:
             cookie_value += "; Secure"
         if expires is not None:
             cookie_value += f"; Expires={expires}"
+        if same_site:
+            cookie_value += f"; SameSite={same_site}"
         self.headers.append((b'set-cookie', cookie_value.encode()))
+
+    @property
+    def cookies(self):
+        # Parse the 'Set-Cookie' headers into a SimpleCookie object
+        cookie = SimpleCookie()
+        for header_name, header_value in self.headers:
+            if header_name.lower() == 'set-cookie':
+                cookie.load(header_value)
+        # Return a dictionary of cookie names and their values
+        return {key: morsel.value for key, morsel in cookie.items()}
 
     @classmethod
     async def json(cls, send, data: dict, status_code: int = 200):

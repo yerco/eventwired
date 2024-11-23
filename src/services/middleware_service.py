@@ -1,14 +1,17 @@
 from typing import Callable, List, Tuple
 
-from src.core.event_bus import Event
+from src.core.event_bus import Event, EventBus
 from src.middleware.base_middleware import BaseMiddleware
 
 
 class MiddlewareService:
-    def __init__(self):
+    def __init__(self, event_bus: EventBus):
         self.middlewares: List[Tuple[BaseMiddleware, int]] = []
+        self.event_bus = event_bus
 
     def register_middleware(self, middleware: BaseMiddleware, priority: int = 0) -> None:
+        if not isinstance(middleware, BaseMiddleware):
+            raise TypeError(f"{middleware} must be an instance of BaseMiddleware")
         self.middlewares.append((middleware, priority))
         # Sort middleware by priority (highest priority first)
         self.middlewares.sort(key=lambda m: m[1], reverse=True)
@@ -38,8 +41,10 @@ class MiddlewareService:
         if response:
             # Add response headers from the event data if available (including Set-Cookie)
             if 'response_headers' in event.data:
-                for header in event.data['response_headers']:
-                    response.headers.append(header)
+                existing_headers = {k: v for k, v in response.headers}
+                for k, v in event.data.get('response_headers', []):
+                    if k not in existing_headers:
+                        response.headers.append((k, v))
 
             # print(f"Final response headers: {response.headers}")
             # Finally, send the response

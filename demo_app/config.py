@@ -14,4 +14,6 @@ config = {
     'JWT_SECRET_KEY': 'my_secret_key',
     'JWT_ALGORITHM': 'HS256',
     'JWT_EXPIRATION_SECONDS': 7200,  # 2 hours expiration time
+    'CSRF_REDIRECT_ON_FAILURE': True,
+    'ENVIRONMENT': 'development',
 }

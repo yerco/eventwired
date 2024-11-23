@@ -88,7 +88,7 @@ async def test_response_set_cookie():
     response.set_cookie(name="sessionid", value="abc123")
 
     # Assert that the set-cookie header was added
-    assert (b'set-cookie', b'sessionid=abc123; Path=/; HttpOnly; Secure') in response.headers
+    assert (b'set-cookie', b'sessionid=abc123; Path=/; HttpOnly; Secure; SameSite=Lax') in response.headers
 
 
 # Test for json response class method

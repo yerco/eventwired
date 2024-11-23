@@ -16,6 +16,16 @@
         <a href="/hello">Hello</a>
     </div>
     <h1>Register</h1>
+    {% if errors %}
+        <div class="error-message">
+            <p>There were errors with your registration:</p>
+            <ul class="error-list">
+                {% for error in errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
     <form method="POST" action="/register" class="registration-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <!-- Username Field -->
@@ -26,7 +36,13 @@
             {% if errors.username %}
             <ul class="error-list">
                 {% for error in errors.username %}
-                <li>{{ error }}</li>
+                    {% if error is iterable and not error is string %}
+                        {% for sub_error in error %}
+                            <li>{{ sub_error }}</li>
+                        {% endfor %}
+                    {% else %}
+                        <li>{{ error }}</li>
+                    {% endif %}
                 {% endfor %}
             </ul>
             {% endif %}

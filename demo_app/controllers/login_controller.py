@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from src.forms.login_form import LoginForm
 from src.core.event_bus import Event
 from src.controllers.http_controller import HTTPController
@@ -18,13 +20,14 @@ async def login_controller(event: Event):
 
     request = event.data['request']
     http_method = request.method
+    session: Session = event.data.get('session')
 
     # Handle the GET request
     if http_method == "GET":
         # Render the login form (empty form initially)
 
         # Retrieve CSRF that was set in the middleware
-        csrf_token = request.csrf_token
+        csrf_token = request.csrf_token or session.data['csrf_token']
         context = {
             "form": LoginForm(),  # Pass an empty form
             "errors": {},  # Pass empty errors dictionary
@@ -81,7 +84,7 @@ async def login_controller(event: Event):
 
                 context = {"form": form, "errors": errors}
 
-                response = await controller.create_html_response(template='login.html', context=context, status=400)
+                response = await controller.create_html_response(template='login.html', context=context, status=HTTPStatus.UNAUTHORIZED)
                 await controller.send_response(response)
         else:
             # If form is invalid, render the form again with errors

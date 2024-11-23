@@ -311,7 +311,7 @@ async def test_login_controller_post_invalid_credentials(monkeypatch):
     # Check response content and status
     assert response.content_type == 'text/html'
     assert content == "<html>Invalid Credentials</html>"  # Check the mocked content
-    assert response.status_code == 400  # Should return a 400 status for invalid credentials
+    assert response.status_code == 401  # Should return a 400 status for invalid credentials
 
 
 @pytest.mark.asyncio

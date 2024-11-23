@@ -54,7 +54,7 @@ async def commands_books_controller(event: Event):
                 context = {
                     "form": form,
                     "errors": {"general": [add_book_result["message"]]},
-                    "csrf_token": event.data.get('csrf_token')
+                    "csrf_token": event.data['request'].csrf_token
                 }
                 rendered_content = template_service.render_template('book_add.html', context)
 
@@ -63,7 +63,7 @@ async def commands_books_controller(event: Event):
             context = {
                 "form": form,
                 "errors": errors,
-                "csrf_token": event.data.get('csrf_token')
+                "csrf_token": event.data['request'].csrf_token
             }
             rendered_content = template_service.render_template('book_add.html', context)
             await controller.send_html(rendered_content)

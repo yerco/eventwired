@@ -2,15 +2,18 @@ import secrets
 
 from src.core.event_bus import EventBus, Event
 from src.core.request import Request
+from src.core.response import Response
 from src.core.session import Session
 from src.middleware.base_middleware import BaseMiddleware
+from src.services.config_service import ConfigService
 
 
 class CSRFMiddleware(BaseMiddleware):
-    def __init__(self, event_bus: EventBus):
+    def __init__(self, event_bus: EventBus, config_service: ConfigService):
         self.event_bus = event_bus
+        self.config_service = config_service
 
-    async def before_request(self, event):
+    async def before_request(self, event) -> Event:
         request: Request = event.data['request']
         session: Session = event.data.get('session')
 
@@ -40,13 +43,32 @@ class CSRFMiddleware(BaseMiddleware):
             if not csrf_token_from_session or \
                     (csrf_token_from_session != csrf_token_from_request and
                      csrf_token_from_session != csrf_token_from_header):
-                return await self.handle_csrf_failure(event)  # Custom handler for CSRF failure
+                await self.handle_csrf_failure(event)  # Custom handler for CSRF failure
 
         return event
 
     # Handle CSRF failure and send a meaningful response to the user
     async def handle_csrf_failure(self, event):
-        await self.event_bus.publish(Event(name="http.error.403", data=event.data))
+        event.data['response_already_sent'] = True
+        if self.config_service.get("CSRF_REDIRECT_ON_FAILURE", False):
+            await self.event_bus.publish(Event(name="http.error.no_csrf", data=event.data))
+        else:
+            await self.event_bus.publish(Event(name="http.error.403", data=event.data))
 
-    async def after_request(self, event):
+    async def after_request(self, event) -> Event:
+        response: Response = event.data.get('response')
+        request: Request = event.data['request']
+        csrf_token = request.csrf_token
+
+        if csrf_token and self.config_service.get('ENABLE_CSRF'):
+            is_production = self.config_service.get('ENVIRONMENT') == 'production'
+            response.set_cookie(
+                name="csrftoken",
+                value=csrf_token,
+                path="/",
+                http_only=is_production,  # Use HttpOnly for production to enhance security
+                secure=is_production,  # Secure only for HTTPS in production
+                same_site="None" if is_production else "",  # None for production, lax or empty for dev
+            )
+
         return event

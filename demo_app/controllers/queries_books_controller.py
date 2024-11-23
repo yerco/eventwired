@@ -39,7 +39,7 @@ async def queries_books_controller(event: Event):
         books = await query_handler.list_all_books()
         context = {
             "books": books,
-            "csrf_token": event.data.get('csrf_token'),
+            "csrf_token": event.data['request'].csrf_token,
         }
         rendered_content = template_service.render_template('book_list.html', context)
         await controller.send_html(rendered_content)
@@ -52,7 +52,7 @@ async def queries_books_controller(event: Event):
         context = {
             "form": form,
             "errors": {},  # No errors when initially rendering the form
-            "csrf_token": event.data.get('csrf_token')  # CSRF token for form submission
+            "csrf_token": event.data['request'].csrf_token  # CSRF token for form submission
         }
 
         # Render the template for adding a book

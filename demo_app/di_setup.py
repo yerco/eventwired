@@ -18,21 +18,21 @@ from src.services.jwt_service import JWTService
 
 from src.middleware.timing_middleware import TimingMiddleware
 from src.middleware.csrf_middleware import CSRFMiddleware
-from src.middleware.session_middleware import SessionMiddleware
+from src.middleware.browser_session_middleware import BrowserSessionMiddleware
 
-from demo_app.config import config
+from demo_app.config import config as default_config
 from demo_app.subscriber_setup import register_subscribers
 # from demo_app.middleware.ip_geolocation_middleware import IpGeolocationMiddleware
 
 
 @di_setup
-async def setup_config_service(container):
-    config_service = ConfigService(config)
+async def setup_config_service(container, config=None):
+    config_service = ConfigService(config or default_config)
     container.register_singleton(config_service, 'ConfigService')
 
 # Just for the CQRS example at /books
 @di_setup
-async def setup_redis_service(container):
+async def setup_redis_service(container, config=None):
     redis_service = None
     config_service = await container.get('ConfigService')
     if config_service.get('USE_REDIS_FOR_CQRS'):
@@ -41,25 +41,25 @@ async def setup_redis_service(container):
             di_container.register_singleton(redis_service, 'RedisService')
 
 @di_setup
-async def setup_utility_service(container):
+async def setup_utility_service(container, config=None):
     di_container.register_transient(TemplateService, 'TemplateService')
     di_container.register_transient(FormService, 'FormService')
 
 @di_setup
-async def setup_event_bus(container):
+async def setup_event_bus(container, config=None):
     event_bus = EventBus()
     await register_subscribers(event_bus)
     di_container.register_singleton(event_bus, 'EventBus')
 
 @di_setup
-async def setup_orm_service(container):
+async def setup_orm_service(container, config=None):
     config_service = await container.get('ConfigService')
     orm_service = ORMService(config_service=config_service, Base=Base)
     await orm_service.initialize()
     di_container.register_singleton(orm_service, 'ORMService')
 
 @di_setup
-async def setup_services(container):
+async def setup_services(container, config=None):
     config_service = await container.get('ConfigService')
     orm_service = await container.get('ORMService')
     event_bus = await container.get('EventBus')
@@ -76,7 +76,7 @@ async def setup_services(container):
     di_container.register_singleton(websocket_service, 'WebSocketService')
 
 @di_setup
-async def setup_routing_service(container):
+async def setup_routing_service(container, config=None):
     event_bus = await container.get('EventBus')
     auth_service = await container.get('AuthenticationService')
     jwt_service = await container.get('JWTService')
@@ -87,12 +87,14 @@ async def setup_routing_service(container):
 
 # Middleware setup
 @di_setup
-async def setup_middleware(container):
-    middleware_service = MiddlewareService()
-    session_service = await container.get('SessionService')
-    middleware_service.register_middleware(SessionMiddleware(session_service), priority=10)
+async def setup_middleware(container, config=None):
     event_bus = await container.get('EventBus')
-    csrf_middleware = CSRFMiddleware(event_bus=event_bus)
+    middleware_service = MiddlewareService(event_bus=event_bus)
+    config_service = await container.get('ConfigService')
+    session_service = await container.get('SessionService')
+    middleware_service.register_middleware(BrowserSessionMiddleware(session_service, config_service=config_service), priority=10)
+    event_bus = await container.get('EventBus')
+    csrf_middleware = CSRFMiddleware(event_bus=event_bus, config_service=config_service)
     middleware_service.register_middleware(csrf_middleware, priority=5)  # lower priority than session middleware
     # middleware_service.register_middleware(IpGeolocationMiddleware(), priority=0)
     middleware_service.register_middleware(TimingMiddleware(), priority=1)

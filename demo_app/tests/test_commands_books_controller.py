@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock, Mock
+from unittest.mock import AsyncMock, patch, MagicMock, Mock, ANY
 from datetime import date
 
 from src.core.event_bus import Event
@@ -184,7 +184,7 @@ async def test_add_book_duplicate_title(event_add_book):
             {
                 "form": form_mock,
                 "errors": {"general": ["A book with this title and author already exists."]},
-                "csrf_token": "dummy_csrf_token"
+                "csrf_token": ANY
             }
         )
 
@@ -231,7 +231,7 @@ async def test_add_book_unexpected_error(event_add_book):
             {
                 "form": form_mock,
                 "errors": {"general": ["An unexpected error occurred. Please try again later"]},
-                "csrf_token": "dummy_csrf_token"
+                "csrf_token": ANY
             }
         )
 

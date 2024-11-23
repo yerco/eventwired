@@ -1,8 +1,9 @@
 import pytest
+import pytest_asyncio
 from pathlib import Path  # Import trio for async path handling
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.ext.asyncio import AsyncEngine
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship, selectinload
 from src.services.config_service import ConfigService
 from src.services.orm_service import ORMService
 
@@ -22,14 +23,34 @@ class ModelForTestingTwo(Base):
     something = Column(String(50), nullable=False)
 
 
-@pytest.fixture(scope="session")
+class OtherModelForTestingOne(Base):
+    __tablename__ = 'othermodelfortestingone'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(50), nullable=False)
+
+    # Relationship to ModelForTestingTwo
+    children = relationship("OtherModelForTestingTwo", back_populates="parent", cascade="all, delete-orphan")
+
+
+# Child model
+class OtherModelForTestingTwo(Base):
+    __tablename__ = 'othermodelfortestingtwo'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    something = Column(String(50), nullable=False)
+    parent_id = Column(Integer, ForeignKey('othermodelfortestingone.id'), nullable=False)
+
+    # Relationship to ModelForTestingOne
+    parent = relationship("OtherModelForTestingOne", back_populates="children")
+
+
+@pytest_asyncio.fixture(scope="session")
 async def orm_service():
     config_service = ConfigService()
     db_file = Path('a_default.db')  # Use trio.Path instead of os.path
     config_service.set('DATABASE_URL', f'sqlite+aiosqlite:///{db_file}')
     orm_service = ORMService(config_service, Base=Base)
-    await orm_service.init()
-    await orm_service.create_tables()  # Ensure tables are created before each test
+    await orm_service.initialize()
+    # Ensure tables are created before each test
     yield orm_service
     await orm_service.cleanup()
 
@@ -47,6 +68,7 @@ async def reset_db(orm_service):
             await conn.run_sync(Base.metadata.drop_all)
             await conn.run_sync(Base.metadata.create_all)  # Recreate tables
         Base.metadata.clear()
+        print("Database reset complete.")
 
 
 @pytest.mark.asyncio
@@ -186,3 +208,150 @@ async def test_cleanup_sqlalchemy(orm_service):
             assert conn is not None, "Connection should still be possible after engine disposal."
     except Exception as e:
         pytest.fail(f"Engine raised an unexpected error after disposal: {e}")
+
+
+@pytest.mark.asyncio
+async def test_filter_single_condition(orm_service):
+    # Arrange: Create multiple instances
+    await orm_service.create(ModelForTestingOne, name="Alice")
+    await orm_service.create(ModelForTestingOne, name="Bob")
+    await orm_service.create(ModelForTestingOne, name="Charlie")
+
+    # Act: Filter by a single condition
+    results = await orm_service.filter(ModelForTestingOne, filters={"name": "Alice"})
+
+    # Assert: Ensure only the matching record is returned
+    assert len(results) == 1, "Filter should return exactly one result."
+    assert results[0].name == "Alice", "The returned instance should have the name 'Alice'."
+    await orm_service.wipe_table(ModelForTestingOne)
+
+
+@pytest.mark.asyncio
+async def test_filter_multiple_conditions(orm_service):
+    # Arrange: Create multiple instances with varying attributes
+    await orm_service.create(ModelForTestingOne, name="Alice")
+    await orm_service.create(ModelForTestingOne, name="Bob")
+    await orm_service.create(ModelForTestingTwo, something="Alice")
+
+    # Act: Filter using multiple conditions
+    results = await orm_service.filter(ModelForTestingOne, filters={"name": "Alice"})
+
+    # Assert: Ensure only records meeting all conditions are returned
+    assert len(results) == 1, "Filter should return exactly one result for the given conditions."
+    assert results[0].name == "Alice", "The returned instance should have the name 'Alice'."
+    await orm_service.wipe_table(ModelForTestingOne)
+
+
+@pytest.mark.asyncio
+async def test_filter_no_matches(orm_service):
+    # Arrange: Create instances with specific attributes
+    await orm_service.create(ModelForTestingOne, name="Alice")
+    await orm_service.create(ModelForTestingOne, name="Bob")
+
+    # Act: Apply a filter with no matches
+    results = await orm_service.filter(ModelForTestingOne, filters={"name": "Charlie"})
+
+    # Assert: Ensure no results are returned
+    assert len(results) == 0, "Filter should return no results if no records match."
+    await orm_service.wipe_table(ModelForTestingOne)
+
+
+@pytest.mark.asyncio
+async def test_filter_eager_loading(orm_service):
+    # Arrange: Create related data with foreign keys
+    parent = await orm_service.create(OtherModelForTestingOne, name="Parent")
+    child1 = await orm_service.create(OtherModelForTestingTwo, something="Child1", parent_id=parent.id)
+    child2 = await orm_service.create(OtherModelForTestingTwo, something="Child2", parent_id=parent.id)
+
+    # Act: Use eager loading to fetch related records
+    results = await orm_service.filter(
+        OtherModelForTestingOne,
+        filters={"id": parent.id},
+        eager_load=[selectinload(OtherModelForTestingOne.children)]  # Use class-bound attribute
+    )
+
+    # Assert: Ensure related data is loaded eagerly
+    assert len(results) == 1, "Filter should return the parent record."
+    assert len(results[0].children) == 2, "The parent should have two related child records."
+    assert {child.something for child in results[0].children} == {"Child1", "Child2"}, \
+        "The related child records should match the created data."
+
+
+
+@pytest.mark.asyncio
+async def test_filter_with_ordering(orm_service):
+    # Arrange: Create multiple instances with varying attributes
+    await orm_service.create(ModelForTestingOne, name="Charlie")
+    await orm_service.create(ModelForTestingOne, name="Alice")
+    await orm_service.create(ModelForTestingOne, name="Bob")
+
+    # Act: Apply ordering to the filter results
+    results = await orm_service.filter(
+        ModelForTestingOne,
+        filters={},
+        order_by=["name"]  # Assuming `name` is the column to order by
+    )
+
+    # Assert: Ensure results are ordered correctly
+    assert len(results) == 3, "All records should be returned."
+    assert [instance.name for instance in results] == ["Alice", "Bob", "Charlie"], \
+        "The results should be ordered alphabetically by name."
+    await orm_service.wipe_table(ModelForTestingOne)
+
+
+@pytest.mark.asyncio
+async def test_filter_with_limit_and_offset(orm_service):
+    # Arrange: Create multiple instances
+    await orm_service.create(ModelForTestingOne, name="Record1")
+    await orm_service.create(ModelForTestingOne, name="Record2")
+    await orm_service.create(ModelForTestingOne, name="Record3")
+    await orm_service.create(ModelForTestingOne, name="Record4")
+
+    # Act: Apply limit and offset to the filter results
+    results = await orm_service.filter(
+        ModelForTestingOne,
+        filters={},
+        limit=2,
+        offset=1
+    )
+
+    # Assert: Ensure only the correct subset of records is returned
+    assert len(results) == 2, "Filter should return the limited number of results."
+    assert [instance.name for instance in results] == ["Record2", "Record3"], \
+        "The results should match the specified offset and limit."
+    await orm_service.wipe_table(ModelForTestingOne)
+
+
+@pytest.mark.asyncio
+async def test_filter_with_complex_conditions(orm_service):
+    # Arrange: Create multiple instances with varying attributes
+    await orm_service.create(OtherModelForTestingOne, name="Alice")
+    await orm_service.create(OtherModelForTestingOne, name="Bob")
+    await orm_service.create(OtherModelForTestingOne, name="Charlie")
+
+    # Act: Apply a complex filter condition (e.g., 'name IN (...)')
+    results = await orm_service.filter(
+        OtherModelForTestingOne,
+        filters={"name__in": ["Alice", "Charlie"]}  # Assuming `name__in` is supported
+    )
+
+    # Assert: Ensure only records meeting the complex condition are returned
+    assert len(results) == 2, "Filter should return the records matching the complex condition."
+    assert {instance.name for instance in results} == {"Alice", "Charlie"}, \
+        "The returned records should match the specified condition."
+
+
+@pytest.mark.asyncio
+async def test_filter_with_no_arguments(orm_service):
+    # Arrange: Create multiple instances
+    await orm_service.create(ModelForTestingOne, name="Alice")
+    await orm_service.create(ModelForTestingOne, name="Bob")
+
+    # Act: Call filter with no filters
+    results = await orm_service.filter(ModelForTestingOne)
+
+    # Assert: Ensure all records are returned
+    assert len(results) == 2, "Filter should return all records if no filters are provided."
+    assert {instance.name for instance in results} == {"Alice", "Bob"}, \
+        "The returned records should include all created records."
+    await orm_service.wipe_table(ModelForTestingOne)

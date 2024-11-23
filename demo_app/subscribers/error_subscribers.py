@@ -10,7 +10,7 @@ async def handle_403_event(event: Event):
     error_page = f"<html><body><h1>USER SIDE YASGI 403 Forbidden: {request.path}</h1></body></html>"
     await send({
         'type': 'http.response.start',
-        'status': 405,
+        'status': 403,
         'headers': [[b'content-type', b'text/html']],
     })
     await send({
@@ -63,4 +63,29 @@ async def handle_500_event(event: Event):
     await send({
         'type': 'http.response.body',
         'body': error_page.encode(),
+    })
+
+
+async def handle_no_csrf_event(event: Event):
+    request = event.data['request']
+    send = event.data['send']
+    response_body = f"""
+    <html>
+        <body>
+            <h1>403 Forbidden: CSRF token missing</h1>
+            <p>The request to {request.path} was rejected due to a missing CSRF token.</p>
+            <p>
+                <a href="{request.path}" >Reload the page</a>
+            </p>
+        </body>
+    </html>
+    """
+    await send({
+        'type': 'http.response.start',
+        'status': 403,
+        'headers': [[b'content-type', b'text/html']],
+    })
+    await send({
+        'type': 'http.response.body',
+        'body': response_body.encode(),
     })

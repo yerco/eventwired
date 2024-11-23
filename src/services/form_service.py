@@ -1,4 +1,7 @@
 # Custom exception for validation errors
+import asyncio
+
+
 class ValidationError(Exception):
     def __init__(self, message, field_name=None):
         super().__init__(message)
@@ -65,6 +68,22 @@ class IntegerValidator(Validator):
             except (ValueError, TypeError):
                 return "Enter a valid integer."
 
+class PasswordValidator(Validator):
+    def __call__(self, field):
+        # Ensure password is at least 3 characters long
+        if not field.value or len(field.value) < 3:
+            return "Password must be at least 3 characters long."
+        # Ensure password contains at least one digit
+        if not any(char.isdigit() for char in field.value):
+            return "Password must contain at least one digit."
+        # Ensure password contains at least one uppercase letter
+        if not any(char.isupper() for char in field.value):
+            return "Password must contain at least one uppercase letter."
+        # Ensure password contains at least one lowercase letter
+        if not any(char.islower() for char in field.value):
+            return "Password must contain at least one lowercase letter."
+        return None
+
 
 class Field:
     def __init__(self, field_type="text", required=True, value=None, validators=None):
@@ -85,7 +104,11 @@ class Field:
         if self.required and not self.value:
             errors.append("This field is required.")
         for validator in self.validators:
-            error = validator(self)
+            # Check if validator is async
+            if asyncio.iscoroutinefunction(validator.__call__):
+                error = await validator(self)
+            else:
+                error = validator(self)
             if error:
                 errors.append(error)
         return errors
@@ -114,8 +137,10 @@ class IntegerField(Field):
         super().__init__(field_type="integer", required=required, value=value, validators=validators or default_validators)
 
 
-class PasswordField(TextField):
-    pass
+class PasswordField(Field):
+    def __init__(self, required=True, value=None, validators=None):
+        default_validators = [PasswordValidator()]
+        super().__init__(field_type="password", required=required, value=value, validators=validators or default_validators)
 
 
 class FormMeta(type):
@@ -147,7 +172,17 @@ class BaseForm(metaclass=FormMeta):
             field_errors = await field.validate()
             if field_errors:
                 is_valid = False
-                self.errors[field_name] = field_errors
+                # Flatten field_errors if necessary
+                if any(isinstance(err, list) for err in field_errors):
+                    flat_field_errors = []
+                    for err in field_errors:
+                        if isinstance(err, list):
+                            flat_field_errors.extend(err)
+                        else:
+                            flat_field_errors.append(err)
+                    self.errors[field_name] = flat_field_errors
+                else:
+                    self.errors[field_name] = field_errors
         return is_valid
 
     def get_errors(self):

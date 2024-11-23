@@ -14,17 +14,33 @@ class SessionService:
     async def load_session(self, session_id: str) -> dict:
         # If no session ID is provided, return an empty session
         if not session_id:
+            print(f"Session {session_id} not found.")
             return {}
 
         # Load session data from the database (or other storage)
-        session = await self.orm_service.get(SessionModel, lookup_value=session_id, lookup_column="session_id")
+        try:
+            session = await self.orm_service.get(SessionModel, lookup_value=session_id, lookup_column="session_id")
+        except Exception as e:
+            print(f"Error fetching session {session_id}: {e}")
+            return {}
         if session:
             # Check if the session has expired
-            if session.expires_at and session.expires_at < datetime.datetime.now(datetime.timezone.utc):
-                # Session has expired; delete it and return an empty session
-                await self.orm_service.delete(SessionModel, session_id)
-                return {}
-            return json.loads(session.session_data)  # Deserialize session data from storage
+            if session.expires_at:
+                if session.expires_at.tzinfo is None:  # Check if it's naive
+                    session.expires_at = session.expires_at.replace(tzinfo=datetime.timezone.utc)
+                delete_expired_sessions = self.config_service.get("DELETE_EXPIRED_SESSIONS", False)
+                if session.expires_at < datetime.datetime.now(datetime.timezone.utc):
+                    if delete_expired_sessions:
+                        # Session has expired; delete it and return an empty session
+                        await self.orm_service.delete(SessionModel, session_id)
+                    return {}
+
+            # Attempt to deserialize session data
+            try:
+                return json.loads(session.session_data)
+            except json.JSONDecodeError as e:
+                print(f"Error decoding session data for {session_id}: {e}")
+            return {}
         else:
             return {}
 
