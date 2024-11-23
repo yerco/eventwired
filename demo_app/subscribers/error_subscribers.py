@@ -89,3 +89,7 @@ async def handle_no_csrf_event(event: Event):
         'type': 'http.response.body',
         'body': response_body.encode(),
     })
+
+
+async def websocket_connection_close(event: Event):
+    pass

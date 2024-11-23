@@ -6,9 +6,8 @@ from src.core.event_bus import Event
 
 
 async def handle_websocket_connections(scope: dict, receive: Callable, send: Callable, request: Request, di_container: Any) -> None:
+    event_bus = await di_container.get('EventBus')
     try:
-        # Get necessary services from the DI container
-        event_bus = await di_container.get('EventBus')
         middleware_service = await di_container.get('MiddlewareService')
 
         # Prepare the event data for WebSocket connections
@@ -33,7 +32,8 @@ async def handle_websocket_connections(scope: dict, receive: Callable, send: Cal
 
         except Exception as e:
             # Handle middleware errors (you may log this in production)
-            await send({'type': 'websocket.close', 'code': 1011})  # Server error code
+            await event_bus.publish(Event(name="websocket.connection.closed", data=event.data))
+            #await send({'type': 'websocket.close', 'code': 1011})  # Server error code
             return
 
         # Delegate message handling to the WebSocket controller
@@ -41,13 +41,16 @@ async def handle_websocket_connections(scope: dict, receive: Callable, send: Cal
 
     except ConnectionError:
         # Handle WebSocket disconnection without logging redundantly
-        await send({'type': 'websocket.close', 'code': 1000})  # Normal closure
+        await event_bus.publish(Event(name="websocket.connection.closed", data={}))
+        #await send({'type': 'websocket.close', 'code': 1000})  # Normal closure
     except asyncio.CancelledError:
         # Graceful handling of cancellation without logging too much
         pass
     except Exception as e:
         # Handle unexpected WebSocket errors
-        await send({'type': 'websocket.close', 'code': 1011})  # Server error
+        # Get necessary services from the DI container
+        await event_bus.publish(Event(name="websocket.connection.closed", data={}))
+        # await send({'type': 'websocket.close', 'code': 1011})  # Server error
 
     finally:
         # Ensure WebSocket is closed properly with minimal logging
@@ -59,5 +62,5 @@ async def handle_websocket_connections(scope: dict, receive: Callable, send: Cal
                 print(f"Failed to close WebSocket gracefully: {close_error}")
 
         # Optionally publish the closure event
-        closed_event = Event(name='websocket.connection.closed', data=event_data)
+        closed_event = Event(name='websocket.connection.closed', data={})
         await event_bus.publish(closed_event)
