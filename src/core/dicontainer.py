@@ -44,6 +44,7 @@ class DIContainer:
     # Enhanced get method to support constructor injection (auto-wiring)
     async def get(self, name):
         if name in self._singletons:
+            print(f"Returning singleton {name} instance at {hex(id(self._singletons[name]))}")
             return self._singletons[name]
         elif name in self._services:
             return await self._create_instance(self._services[name])
