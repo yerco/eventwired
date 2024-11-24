@@ -7,26 +7,9 @@ from src.services.websocket_handler import WebSocketHandler
 # Manages multiple WebSocket client connections, providing shared services like broadcasting messages,
 # starting/stopping connections, and managing the list of active clients.
 class WebSocketService:
-    _instance = None
-    _initialized = False
-
-    def __new__(cls):
-        if cls._instance is None:
-            print(f"Creating new instance of WebSocketService at {hex(id(cls))}")
-            cls._instance = super().__new__(cls)
-            cls._instance.clients = []
-            cls._instance._lock = asyncio.Lock()
-        return cls._instance
-
     def __init__(self):
-        if not self._initialized:
-            print(f"Initializing WebSocketService instance at {hex(id(self))}")
-            # 'self.clients' is used instead of 'self.controllers' to keep it generic
-            self.clients: List[WebSocketHandler] = []
-            self._lock = asyncio.Lock()
-            self._initialized = True
-        else:
-            print(f"WebSocketService instance at {hex(id(self))} already initialized")
+        self.clients: List[WebSocketHandler] = []
+        self._lock = asyncio.Lock()
 
     # Registers a new WebSocket client. Internally, creates a WebSocketHandler for managing client communication.
     def register_client(self, client: WebSocketHandler):
@@ -140,3 +123,10 @@ class WebSocketService:
 
         # Remove inactive clients and clear the list after shutdown
         await self._remove_inactive_clients(clients_to_remove)
+
+    # Reset the singleton's state for testing purposes
+    def reset(self):
+        self._initialized = False  # Allow re-initialization
+        self.clients = []
+        self._lock = asyncio.Lock()
+        print(f"WebSocketService at {hex(id(self))} has been reset.")

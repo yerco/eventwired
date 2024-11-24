@@ -26,6 +26,7 @@ class StaticFilesHandler:
                 'type': 'http.response.body',
                 'body': b'File not found.',
             })
+            event.data['response_already_sent'] = True
             return
 
         # Determine the content type based on file extension
@@ -46,6 +47,7 @@ class StaticFilesHandler:
                 'type': 'http.response.body',
                 'body': content,
             })
+            event.data['response_already_sent'] = True
         except Exception as e:
             # In case of an error, send a 500 response
             await send({
@@ -57,6 +59,7 @@ class StaticFilesHandler:
                 'type': 'http.response.body',
                 'body': b'Internal server error.',
             })
+            event.data['response_already_sent'] = True
 
     def _get_content_type(self, file_path):
         if file_path.endswith('.css'):

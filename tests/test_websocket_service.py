@@ -1,12 +1,34 @@
 import pytest
 from unittest.mock import AsyncMock, Mock
 
+import pytest_asyncio
+
 from src.services.websocket_service import WebSocketService
+from src.core.dicontainer import di_container
 
 
-def test_add_and_remove_client():
-    websocket_service = WebSocketService()
+@pytest_asyncio.fixture
+def websocket_service():
+    service = WebSocketService()
+    return service
 
+
+@pytest_asyncio.fixture(autouse=True, scope="function")
+def reset_websocket_service():
+    service = WebSocketService()
+    service.reset()
+    yield
+    service.reset()
+
+
+@pytest_asyncio.fixture(autouse=True, scope="function")
+def reset_di_container_fixture():
+    di_container.reset()
+    yield
+    di_container.reset()
+
+
+def test_add_and_remove_client(websocket_service):
     # Test adding clients
     websocket_service.add_client("client1")
     assert "client1" in websocket_service.clients
@@ -20,9 +42,8 @@ def test_add_and_remove_client():
 
 
 @pytest.mark.asyncio
-async def test_start_websocket_service():
-
-    websocket_service = WebSocketService()
+async def test_start_websocket_service(websocket_service):
+    di_container.reset()
     mock_controller = AsyncMock()
     websocket_service.register_client(mock_controller)
     mock_controller.connection_accepted = False
@@ -34,8 +55,7 @@ async def test_start_websocket_service():
 
 
 @pytest.mark.asyncio
-async def test_stop_websocket_service():
-    websocket_service = WebSocketService()
+async def test_stop_websocket_service(websocket_service):
     mock_controller = AsyncMock()
     mock_controller.connection_accepted = True
 
@@ -46,8 +66,7 @@ async def test_stop_websocket_service():
 
 
 @pytest.mark.asyncio
-async def test_listen_websocket_service(monkeypatch):
-    websocket_service = WebSocketService()
+async def test_listen_websocket_service(websocket_service, monkeypatch):
     mock_controller = AsyncMock()
     mock_controller.connection_accepted = True
 
@@ -70,8 +89,7 @@ async def test_listen_websocket_service(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_underscore_listen_websocket_service(monkeypatch):
-    websocket_service = WebSocketService()
+async def test_underscore_listen_websocket_service(websocket_service, monkeypatch):
     mock_controller = AsyncMock()
     mock_controller.connection_accepted = True
 
@@ -94,8 +112,7 @@ async def test_underscore_listen_websocket_service(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_underscore_listen_websocket_service_ping():
-    websocket_service = WebSocketService()
+async def test_underscore_listen_websocket_service_ping(websocket_service):
     mock_controller = AsyncMock()
     mock_controller.connection_accepted = True
 
@@ -116,8 +133,7 @@ async def test_underscore_listen_websocket_service_ping():
 
 
 @pytest.mark.asyncio
-async def test_underscore_listen_websocket_service_disconnect():
-    websocket_service = WebSocketService()
+async def test_underscore_listen_websocket_service_disconnect(websocket_service):
     mock_controller = AsyncMock()
     mock_controller.connection_accepted = True
 
@@ -138,8 +154,7 @@ async def test_underscore_listen_websocket_service_disconnect():
 
 
 @pytest.mark.asyncio
-async def test_underscore_listen_websocket_service_no_message():
-    websocket_service = WebSocketService()
+async def test_underscore_listen_websocket_service_no_message(websocket_service):
     mock_controller = AsyncMock()
     mock_controller.connection_accepted = True
 
@@ -160,8 +175,7 @@ async def test_underscore_listen_websocket_service_no_message():
 
 
 @pytest.mark.asyncio
-async def test_graceful_shutdown():
-    websocket_service = WebSocketService()
+async def test_graceful_shutdown(websocket_service):
     mock_controller = AsyncMock()
 
     await websocket_service.graceful_shutdown(mock_controller)
@@ -173,9 +187,7 @@ async def test_graceful_shutdown():
 
 
 @pytest.mark.asyncio
-async def test_broadcast_message():
-    websocket_service = WebSocketService()
-
+async def test_broadcast_message(websocket_service):
     # Create mock clients to add to WebSocketService
     mock_client_1 = Mock()
     mock_client_1.send_websocket_message = AsyncMock()
@@ -198,9 +210,7 @@ async def test_broadcast_message():
 
 
 @pytest.mark.asyncio
-async def test_broadcast_shutdown():
-    websocket_service = WebSocketService()
-
+async def test_broadcast_shutdown(websocket_service):
     # Create mock clients for WebSocketService
     mock_client_1 = Mock()
     mock_client_1.send_websocket_message = AsyncMock()
@@ -233,8 +243,7 @@ async def test_broadcast_shutdown():
 
 
 @pytest.mark.asyncio
-async def test_listen_websocket_service_error_handling(monkeypatch):
-    websocket_service = WebSocketService()
+async def test_listen_websocket_service_error_handling(websocket_service, monkeypatch):
     mock_controller = AsyncMock()
     mock_controller.connection_accepted = True
 

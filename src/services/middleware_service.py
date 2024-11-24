@@ -38,6 +38,8 @@ class MiddlewareService:
 
         # Now, after all middlewares, send the response
         response = event.data.get('response')  # Fetch the response prepared by the controller
+        if event.data.get('response_already_sent', False):
+            return
         if response:
             # Add response headers from the event data if available (including Set-Cookie)
             if 'response_headers' in event.data:
@@ -49,3 +51,4 @@ class MiddlewareService:
             # print(f"Final response headers: {response.headers}")
             # Finally, send the response
             await response.send(event.data['send'])
+            event.data['response_already_sent'] = True

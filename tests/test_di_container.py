@@ -48,26 +48,38 @@ async def di_container():
 async def test_register_singleton(di_container):
     di_container.reset()
     config_service = ConfigService(config_name="custom_config")
-    di_container.register_singleton(config_service, 'ConfigService')
+    di_container.register_singleton_instance(config_service, 'ConfigService')
 
-    retrieved_service = await di_container.get('ConfigService')
-    print(f"Retrieved service: {retrieved_service}")
-    print(f"Config name: {retrieved_service.config_name}")
-    # Apparently there's an unidentified leak when running all the tests of the app
-    if isinstance(retrieved_service, AsyncMock):
-        print("Retrieved service is an AsyncMock")
-        assert True is True
-    else:
-        assert not isinstance(retrieved_service, AsyncMock)
-        assert retrieved_service.config_name == "custom_config"
-        assert retrieved_service is config_service  # Same instance (singleton)
+    retrieved_service1 = await di_container.get('ConfigService')
+    retrieved_service2 = await di_container.get('ConfigService')
+
+    retrieved_service3 = di_container.get_sync('ConfigService')
+
+    print(f"Retrieved service: {retrieved_service1}")
+    print(f"Retrieved service: {retrieved_service2}")
+    print(f"Retrieved service: {retrieved_service3}")
+
+    # Check if any retrieved service is an AsyncMock (unexpected)
+    for idx, service in enumerate([retrieved_service1, retrieved_service2, retrieved_service3], start=1):
+        if isinstance(service, AsyncMock):
+            pytest.fail(f"Retrieved service{idx} is an AsyncMock, which is unexpected.")
+
+    # Assert that all retrieved services are the same instance
+    assert retrieved_service1 is config_service, "retrieved_service1 is not the same as the registered singleton instance."
+    assert retrieved_service2 is config_service, "retrieved_service2 is not the same as the registered singleton instance."
+    assert retrieved_service3 is config_service, "retrieved_service3 (sync) is not the same as the registered singleton instance."
+
+    # Assert that the config_name is correctly set
+    assert retrieved_service1.config_name == "custom_config", "ConfigService.config_name does not match the expected value."
+    assert retrieved_service2.config_name == "custom_config", "ConfigService.config_name does not match the expected value."
+    assert retrieved_service3.config_name == "custom_config", "ConfigService.config_name does not match the expected value."
 
 
 # Test for transient registration
 @pytest.mark.asyncio
 async def test_register_transient(di_container):
     di_container.reset()
-    di_container.register_transient(ConfigService, 'ConfigService')
+    di_container.register_transient_class(ConfigService, 'ConfigService')
 
     first_instance = await di_container.get('ConfigService')
     second_instance = await di_container.get('ConfigService')
@@ -86,8 +98,8 @@ async def test_register_transient(di_container):
 async def test_auto_wiring(di_container):
     di_container.reset()
     # Register services for auto-wiring
-    di_container.register_singleton(ServiceA(), 'ServiceA')
-    di_container.register_transient(ServiceB, 'ServiceB')
+    di_container.register_singleton_instance(ServiceA(), 'ServiceA')
+    di_container.register_transient_class(ServiceB, 'ServiceB')
 
     # Retrieve an instance of ServiceB, which should auto-wire ServiceA
     service_b = await di_container.get('ServiceB')
@@ -120,9 +132,9 @@ async def test_service_not_found(di_container):
 async def test_complex_dependency_graph(di_container):
     di_container.reset()
     # Register singleton and transient services in the DI container
-    di_container.register_singleton(ConfigService(config_name="main_config"), 'ConfigService')
-    di_container.register_transient(DatabaseService, 'DatabaseService')
-    di_container.register_transient(LoggingService, 'LoggingService')
+    di_container.register_singleton_instance(ConfigService(config_name="main_config"), 'ConfigService')
+    di_container.register_transient_class(DatabaseService, 'DatabaseService')
+    di_container.register_transient_class(LoggingService, 'LoggingService')
 
     # Resolve multiple dependencies
     db_service = await di_container.get('DatabaseService')
@@ -147,10 +159,10 @@ async def test_complex_dependency_graph(di_container):
 async def test_singleton_auto_wiring(di_container):
     di_container.reset()
     config_service = ConfigService("singleton_config")
-    di_container.register_singleton(config_service, 'ConfigService')
+    di_container.register_singleton_instance(config_service, 'ConfigService')
 
     # Registering a class that depends on ConfigService
-    di_container.register_transient(DatabaseService, 'DatabaseService')
+    di_container.register_transient_class(DatabaseService, 'DatabaseService')
 
     # Get the DatabaseService, which should get the same ConfigService
     db_service = await di_container.get('DatabaseService')
