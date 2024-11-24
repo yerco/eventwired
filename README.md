@@ -9,7 +9,7 @@ A lightweight, async-first web framework built with modern web development in mi
 ---
 
 ## Tools of the trade
-- Python 3.11.8
+- Python 3.12.3
 
 ## How to run
 
