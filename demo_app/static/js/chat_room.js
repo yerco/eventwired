@@ -1,5 +1,7 @@
 // Create a new WebSocket connection to the server
-const ws = new WebSocket("ws://127.0.0.1:8000/myws");
+const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+const host = window.location.host;
+const ws = new WebSocket(`${protocol}://${host}/myws`);
 
 // Listen for connection open event
 ws.onopen = function() {
