@@ -4,7 +4,7 @@
 
 A lightweight, async-first web framework built with modern web development in mind. **This is a work in progress** that primarily serves **educational purposes**.
 
-🔗 **[Live Demo](https://yasgi-frame.work)**
+🔗 **[Live Demo](https://eventwired.org/)**
 
 ---
 
