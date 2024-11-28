@@ -1,17 +1,22 @@
 import os
 from aiofiles import open as aio_open
 
-from src.core.event_bus import Event
+from src.core.event_bus import Event, EventBus
 
 
 class StaticFilesHandler:
-    def __init__(self, static_dir, static_url_path):
+    def __init__(self, static_dir, static_url_path, event_bus: EventBus):
         self.static_dir = os.path.abspath(static_dir)
         self.static_url_path = static_url_path
+        self.event_bus = event_bus
 
     async def handle(self, event: Event):
         request = event.data['request']
         send = event.data.get('send')
+
+        if not request.path.startswith(self.static_url_path):
+            return  # Not a static file request; let other handlers process it
+
         filename = request.path[len(self.static_url_path):].lstrip("/")
         file_path = os.path.join(self.static_dir, filename)
 
@@ -26,6 +31,7 @@ class StaticFilesHandler:
                 'type': 'http.response.body',
                 'body': b'File not found.',
             })
+            await self.emit_request_completed(event)
             event.data['response_already_sent'] = True
             return
 
@@ -47,6 +53,7 @@ class StaticFilesHandler:
                 'type': 'http.response.body',
                 'body': content,
             })
+            await self.emit_request_completed(event)
             event.data['response_already_sent'] = True
         except Exception as e:
             # In case of an error, send a 500 response
@@ -59,6 +66,7 @@ class StaticFilesHandler:
                 'type': 'http.response.body',
                 'body': b'Internal server error.',
             })
+            await self.emit_request_completed(event)
             event.data['response_already_sent'] = True
 
     def _get_content_type(self, file_path):
@@ -76,3 +84,7 @@ class StaticFilesHandler:
             return 'text/html'
         else:
             return 'application/octet-stream'
+
+    async def emit_request_completed(self, event: Event): # Access di_container from event
+        completed_event = Event(name='http.request.completed', data=event.data)
+        await self.event_bus.publish(completed_event)

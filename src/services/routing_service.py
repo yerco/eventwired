@@ -24,7 +24,7 @@ class RoutingService:
         }
         self.authenticated_routes: List[str] = []
         self.jwt_authenticated_routes: List[str] = []  # New list for JWT protected routes
-        self.static_handler = StaticFilesHandler(static_dir="static", static_url_path="/static")
+        self.static_handler = StaticFilesHandler(static_dir="static", static_url_path="/static", event_bus=event_bus)
 
     async def initialize(self):
         static_dir = self.config_service.get('STATIC_DIR', 'static')
@@ -59,7 +59,7 @@ class RoutingService:
         # Convert static_dir to an absolute path
         static_dir_abs = os.path.abspath(static_dir)
         # Initialize StaticFilesHandler with the provided directory and URL path
-        self.static_handler = StaticFilesHandler(static_dir=static_dir_abs, static_url_path=static_url_path)
+        self.static_handler = StaticFilesHandler(static_dir=static_dir_abs, static_url_path=static_url_path, event_bus=self.event_bus)
 
         # Convert the static path to a regex
         static_regex = r'^/static/(?P<filename>.+)$'

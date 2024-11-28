@@ -25,9 +25,11 @@ async def handle_http_requests(scope: dict, receive: Callable[[], Any], send: Ca
         # Execute middleware chain before publishing the event
         await middleware_service.execute(event, final_handler)
 
-        # Emit 'http.request.completed' after all processing
-        completed_event = Event(name='http.request.completed', data=event_data)
-        await event_bus.publish(completed_event)
+        # Check if a response has already been sent
+        if not event.data.get('response_already_sent'):
+            # Emit 'http.request.completed' after all processing
+            completed_event = Event(name='http.request.completed', data=event_data)
+            await event_bus.publish(completed_event)
     except Exception as e:
         print(f"Error during request handling: {e}")
         event_bus = await di_container.get('EventBus')

@@ -18,6 +18,8 @@ async def handle_403_event(event: Event):
         'body': error_page.encode(),
     })
 
+    event.data['response_already_sent'] = True
+
 
 async def handle_404_event(event: Event):
     template_service = await di_container.get('TemplateService')
@@ -34,6 +36,7 @@ async def handle_404_event(event: Event):
         'type': 'http.response.body',
         'body': rendered_content.encode(),
     })
+    event.data['response_already_sent'] = True
 
 
 async def handle_405_event(event: Event):
@@ -49,6 +52,7 @@ async def handle_405_event(event: Event):
         'type': 'http.response.body',
         'body': error_page.encode(),
     })
+    event.data['response_already_sent'] = True
 
 
 async def handle_500_event(event: Event):
@@ -64,6 +68,7 @@ async def handle_500_event(event: Event):
         'type': 'http.response.body',
         'body': error_page.encode(),
     })
+    event.data['response_already_sent'] = True
 
 
 async def handle_no_csrf_event(event: Event):
@@ -89,6 +94,7 @@ async def handle_no_csrf_event(event: Event):
         'type': 'http.response.body',
         'body': response_body.encode(),
     })
+    event.data['response_already_sent'] = True
 
 
 async def websocket_connection_close(event: Event):

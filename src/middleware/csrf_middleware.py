@@ -49,7 +49,6 @@ class CSRFMiddleware(BaseMiddleware):
 
     # Handle CSRF failure and send a meaningful response to the user
     async def handle_csrf_failure(self, event):
-        event.data['response_already_sent'] = True
         if self.config_service.get("CSRF_REDIRECT_ON_FAILURE", False):
             await self.event_bus.publish(Event(name="http.error.no_csrf", data=event.data))
         else:

@@ -35,6 +35,8 @@ class EventBus:
         handled = False
         if event.name in self.listeners:
             for listener in self.listeners[event.name]:
+                if event.data.get('response_already_sent', False):
+                    break  # Stop processing further listeners
                 try:
                     if asyncio.iscoroutinefunction(listener):
                         await listener(event)  # Await the coroutine function

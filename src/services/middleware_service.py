@@ -51,4 +51,4 @@ class MiddlewareService:
             # print(f"Final response headers: {response.headers}")
             # Finally, send the response
             await response.send(event.data['send'])
-            event.data['response_already_sent'] = True
+            # event.data['response_already_sent'] = True

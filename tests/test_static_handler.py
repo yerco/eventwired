@@ -8,7 +8,7 @@ STATIC_DIR = "tests/static_test"
 
 # Static handler setup for tests
 STATIC_URL_PATH = "/static"
-static_handler = StaticFilesHandler(STATIC_DIR, STATIC_URL_PATH)
+static_handler = StaticFilesHandler(STATIC_DIR, STATIC_URL_PATH, event_bus=AsyncMock())
 
 
 @pytest.fixture(scope="module", autouse=True)
