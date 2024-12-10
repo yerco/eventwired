@@ -1,6 +1,16 @@
-from src.services.config_service import ConfigService
+import os
+from datetime import timedelta
 
-config_service = ConfigService()
-secret_key = config_service.get('SECRET_KEY')
-prune_interval = config_service.get('PRUNE_INTERVAL')
-database_url = config_service.get('DATABASE_URL')
+DEFAULT_CONFIG = {
+    'SECRET_KEY': os.getenv('SECRET_KEY', 'default_secret'),
+    'PRUNE_INTERVAL': timedelta(minutes=5),
+    'DATABASE_URL': os.getenv('DATABASE_URL', 'sqlite+aiosqlite:///eventwired.db'),
+    'TEMPLATE_DIR': 'src/templates',
+    'ORM_ENGINE': 'SQLAlchemy',
+    'DB_SESSION': None,
+    'SESSION_EXPIRY_SECONDS': 3600,  # Default session expiry
+    'USE_REDIS_FOR_CQRS': False,
+    'DELETE_EXPIRED_SESSIONS': False,
+    'CSRF_REDIRECT_ON_FAILURE': False,
+    'ENVIRONMENT': 'development',
+}

@@ -34,7 +34,7 @@ def test_load_default_config(default_config):
     # Test if default configuration values are loaded
     assert default_config.get('SECRET_KEY') == 'default_secret'
     assert default_config.get('PRUNE_INTERVAL') == timedelta(minutes=5)
-    assert default_config.get('DATABASE_URL') == 'sqlite+aiosqlite:///yasgi.db'
+    assert default_config.get('DATABASE_URL') == 'sqlite+aiosqlite:///eventwired.db'
     assert default_config.get('TEMPLATE_DIR') == 'src/templates'
     assert default_config.get('SESSION_EXPIRY_SECONDS') == 3600
     assert default_config.get('USE_REDIS_FOR_CQRS') is False

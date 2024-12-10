@@ -1,6 +1,7 @@
 from src.core.setup_registry import di_setup
 from src.core.dicontainer import di_container
 from src.core.event_bus import EventBus
+from src.middleware.jwt_middleware import JWTMiddleware
 from src.models.base import Base
 from src.services.orm_service import ORMService
 from src.services.form_service import FormService
@@ -93,6 +94,8 @@ async def setup_middleware(container, config=None):
     middleware_service = MiddlewareService(event_bus=event_bus)
     config_service = await container.get('ConfigService')
     session_service = await container.get('SessionService')
+    # jwt_service = await container.get('JWTService')
+    #middleware_service.register_middleware(JWTMiddleware(jwt_service=jwt_service), priority=3)
     middleware_service.register_middleware(BrowserSessionMiddleware(session_service, config_service=config_service), priority=10)
     event_bus = await container.get('EventBus')
     csrf_middleware = CSRFMiddleware(event_bus=event_bus, config_service=config_service)
