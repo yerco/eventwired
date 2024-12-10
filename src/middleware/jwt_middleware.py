@@ -28,8 +28,9 @@ class JWTMiddleware(BaseMiddleware):
         try:
             payload = await self.jwt_service.validate_token(token)
             event.data["user"] = payload  # Attach user info to event data
-        except (InvalidTokenError, ExpiredSignatureError):
-            await controller.send_json({"error": "Invalid or expired token"}, status=401)
+        except ValueError as ve:
+            await controller.send_json({"error": str(ve)}, status=401)
+            event.data['response_already_sent'] = True
 
         return event  # Proceed with the request
 

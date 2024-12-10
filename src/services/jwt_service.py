@@ -23,8 +23,10 @@ class JWTService:
         # Add issued_at and expiration to payload
         payload_copy = payload.copy()
         payload_copy.update({
+            "sub": payload.get("user_id"),
             "iat": current_time,
-            "exp": expiration_time
+            "exp": expiration_time,
+            "nbf": current_time
         })
 
         # Generate the JWT token asynchronously to avoid blocking the event loop
