@@ -16,4 +16,5 @@ config = {
     'JWT_EXPIRATION_SECONDS': 7200,  # 2 hours expiration time
     'CSRF_REDIRECT_ON_FAILURE': False,
     'ENVIRONMENT': 'development',
+    'CORS_ALLOWED_ORIGINS': ["*"],  # Beware, allowing all origins
 }

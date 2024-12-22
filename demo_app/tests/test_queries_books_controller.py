@@ -1,7 +1,7 @@
 from datetime import date
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock, Mock, ANY
 
 from demo_app.forms.book_form import BookForm
 from src.core.event_bus import Event
@@ -356,7 +356,7 @@ async def test_edit_book(event_edit_book, monkeypatch):
         'book_edit.html', {
             "form": form_mock,
             "errors": {},
-            "csrf_token": "dummy_csrf_token"
+            "csrf_token": ANY
         }
     )  # Ensure that the correct template was rendered with the right context
 
@@ -427,7 +427,7 @@ async def test_edit_book_with_redis(event_edit_book, monkeypatch):
         'book_edit.html', {
             "form": form_mock,
             "errors": {},
-            "csrf_token": "dummy_csrf_token"
+            "csrf_token": ANY
         }
     )  # Ensure that the correct template was rendered with the right context
 

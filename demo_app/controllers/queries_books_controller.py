@@ -110,6 +110,6 @@ async def queries_books_controller(event: Event):
                 rendered_content = template_service.render_template('book_edit.html', {
                     "form": form,
                     "errors": {},
-                    "csrf_token": event.data.get('csrf_token')
+                    "csrf_token": event.data['request'].csrf_token
                 })
                 await controller.send_html(rendered_content)

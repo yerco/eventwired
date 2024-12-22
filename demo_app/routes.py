@@ -1,3 +1,4 @@
+from demo_app.controllers.cors_test_controller import cors_test_controller
 from demo_app.controllers.hello_controller import hello_controller
 from demo_app.controllers.page_controller import page_detail_controller
 from demo_app.controllers.home_controller import home_controller
@@ -22,6 +23,7 @@ async def register_routes(routing_service):
     routing_service.add_route('/logout', 'GET', logout_controller)
     routing_service.add_route('/chat_room', 'GET', render_chat_room_controller)
     routing_service.add_route('/myws', 'WEBSOCKET', chat_room_controller)
+    routing_service.add_route('/cors', ['GET', 'POST', 'OPTIONS'], cors_test_controller)
     # Command
     routing_service.add_route('/books/action/add', ['POST'], commands_books_controller)
     routing_service.add_route('/books/<str:title>/edit', ['POST'], commands_books_controller)

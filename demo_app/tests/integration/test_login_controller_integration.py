@@ -1,21 +1,45 @@
 import pytest
-import tracemalloc
 import os
 from unittest.mock import AsyncMock, Mock
 
+from src.core.dicontainer import di_container, DIContainer
 from src.core.request import Request
-from src.core.event_bus import Event
-from src.core.setup_registry import run_setups
+from src.core.event_bus import Event, EventBus
+from src.services.form_service import FormService
+from src.services.orm_service import ORMService
+from src.services.security.authentication_service import AuthenticationService
+from src.services.session_service import SessionService
+from src.services.template_service import TemplateService
+from src.services.config_service import ConfigService
 
 from demo_app.controllers.login_controller import login_controller
 from demo_app.models.user import User
-from demo_app.di_setup import di_container
+from demo_app.config import config
+
+
+# Special container for the test, precaution to not stomp real db
+@pytest.fixture(autouse=True)
+async def container():
+    di_container = DIContainer()
+    # Replacing the database
+    config['DATABASE_URL'] = 'sqlite:///test_db.db'
+    config_service = ConfigService(config)
+    di_container.register_singleton_instance(config_service, 'ConfigService')
+    di_container.register_singleton_class(FormService, 'FormService')
+    di_container.register_singleton_class(TemplateService, 'TemplateService')
+    di_container.register_singleton_class(AuthenticationService, 'AuthenticationService')
+    di_container.register_singleton_class(ORMService, 'ORMService')
+    di_container.register_singleton_class(SessionService, 'SessionService')
+    di_container.register_singleton_class(EventBus, 'EventBus')
+    yield di_container
+    # cleanup
+    if os.path.exists('test_db.db'):
+        os.remove('test_db.db')
 
 
 @pytest.mark.asyncio
-async def test_login_controller_get_integration():
-    # Set up the full DI container
-    await run_setups(di_container)
+async def test_login_controller_get_integration(monkeypatch, container):
+    monkeypatch.setattr('src.core.framework_app.di_container', container)
 
     # Simulate an actual HTTP GET request for the login page
     event = Event(name='http.request.received', data={
@@ -37,10 +61,6 @@ async def test_login_controller_get_integration():
 # Not that 'integration' kind of test
 @pytest.mark.asyncio
 async def test_login_controller_post_success_full(monkeypatch):
-    tracemalloc.start()
-    if os.path.exists('test_db.db'):
-        os.remove('test_db.db')
-
     # Mock the TemplateService to avoid using real templates
     mock_template_service = AsyncMock()
     mock_template_service.render_template.return_value = "Login successful"
@@ -121,17 +141,9 @@ async def test_login_controller_post_success_full(monkeypatch):
     assert "Login successful" in await response.content
     assert response.content_type == 'text/html'
 
-    tracemalloc.stop()
-    # Clean up
-    if os.path.exists('test_db.db'):
-        os.remove('test_db.db')
-
 
 @pytest.mark.asyncio
 async def test_login_controller_invalid_method_integration():
-    # Set up the full DI container
-    await run_setups(di_container)
-
     # Simulate a request with an unsupported method (e.g., PUT)
     mock_request = Mock(method="PUT")
 
