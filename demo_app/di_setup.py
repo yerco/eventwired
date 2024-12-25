@@ -1,8 +1,6 @@
 from src.core.setup_registry import di_setup
 from src.core.dicontainer import di_container
 from src.core.event_bus import EventBus
-from src.middleware.cors_middleware import CORSMiddleware
-from src.middleware.jwt_middleware import JWTMiddleware
 from src.models.base import Base
 from src.services.orm_service import ORMService
 from src.services.form_service import FormService
@@ -21,10 +19,11 @@ from src.services.jwt_service import JWTService
 from src.middleware.timing_middleware import TimingMiddleware
 from src.middleware.csrf_middleware import CSRFMiddleware
 from src.middleware.browser_session_middleware import BrowserSessionMiddleware
+from src.middleware.cors_middleware import CORSMiddleware
+from src.middleware.jwt_middleware import JWTMiddleware
 
 from demo_app.config import config as default_config
 from demo_app.subscriber_setup import register_subscribers
-from tests.test_cors_middleware import cors_middleware
 
 
 # from demo_app.middleware.ip_geolocation_middleware import IpGeolocationMiddleware
