@@ -2,21 +2,21 @@ from http import HTTPStatus
 
 from src.core.event_bus import Event
 from src.controllers.http_controller import HTTPController
+from src.core.session import Session
+from src.core.decorators import inject
 
-from demo_app.di_setup import di_container
 from demo_app.models.user import User
 from demo_app.forms.register_form import RegisterForm
-from src.core.session import Session
+from src.services.form_service import FormService
+from src.services.orm_service import ORMService
+from src.services.password_service import PasswordService
+from src.services.template_service import TemplateService
 
 
-async def register_controller(event: Event):
+@inject
+async def register_controller(event: Event, form_service: FormService, template_service: TemplateService,
+                              orm_service: ORMService, password_service: PasswordService):
     controller = HTTPController(event)
-
-    # Retrieve the necessary services
-    form_service = await di_container.get('FormService')
-    template_service = await di_container.get('TemplateService')
-    orm_service = await di_container.get('ORMService')
-    password_service = await di_container.get('PasswordService')
 
     request = event.data['request']
     session: Session = event.data.get('session')

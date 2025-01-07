@@ -1,15 +1,14 @@
 from src.controllers.http_controller import HTTPController
 from src.core.event_bus import Event
+from src.core.decorators import inject
 
-from demo_app.di_setup import di_container
 from demo_app.models.user import User
+from src.services.orm_service import ORMService
+from src.services.template_service import TemplateService
 
 
-async def home_controller(event: Event):
-    # Resolve services from the DI container
-    template_service = await di_container.get('TemplateService')
-    orm_service = await di_container.get('ORMService')
-
+@inject
+async def home_controller(event: Event, template_service: TemplateService, orm_service: ORMService):
     users = await orm_service.all(User)
 
     controller = HTTPController(event)

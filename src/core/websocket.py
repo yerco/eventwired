@@ -3,12 +3,15 @@ from typing import Callable, Any
 
 from src.core.request import Request
 from src.core.event_bus import Event
+from src.core.context_manager import set_container
 
 
-async def handle_websocket_connections(scope: dict, receive: Callable, send: Callable, request: Request, di_container: Any) -> None:
-    event_bus = await di_container.get('EventBus')
+async def handle_websocket_connections(scope: dict, receive: Callable, send: Callable, request: Request,
+                                       container: Any) -> None:
+    set_container(container)
+    event_bus = await container.get('EventBus')
     try:
-        middleware_service = await di_container.get('MiddlewareService')
+        middleware_service = await container.get('MiddlewareService')
 
         # Prepare the event data for WebSocket connections
         event_data = {

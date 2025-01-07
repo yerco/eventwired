@@ -1,15 +1,14 @@
 from src.controllers.http_controller import HTTPController
 from src.core.event_bus import Event
+from src.core.decorators import inject
+from src.services.orm_service import ORMService
+from src.services.template_service import TemplateService
 
-from demo_app.di_setup import di_container
 from demo_app.models.user import User
 
 
-async def hello_controller(event: Event):
-    # Access the ORMService and User model from the DI container
-    orm_service = await di_container.get('ORMService')
-    template_service = await di_container.get('TemplateService')
-
+@inject
+async def hello_controller(event: Event, orm_service: ORMService, template_service: TemplateService):
     # Fetch all users from the database
     users = await orm_service.all(User)
 

@@ -1,24 +1,22 @@
 from src.core.event_bus import Event
 from src.controllers.http_controller import HTTPController
+from src.core.decorators import inject
+from src.services.publisher_service import PublisherService
+from src.services.session_service import SessionService
+from src.services.template_service import TemplateService
 
-from demo_app.di_setup import di_container
 
-
-async def logout_controller(event: Event):
+@inject
+async def logout_controller(event: Event, template_service: TemplateService, publisher_service: PublisherService,
+                            session_service: SessionService):
     # Access the session from the event data
     session = event.data.get('session')
-
-    # Retrieve TemplateService from the DI container
-    template_service = await di_container.get('TemplateService')
 
     # Initialize the controller for sending the response, providing the TemplateService
     controller = HTTPController(event, template_service=template_service)
 
-    publisher_service = await di_container.get('PublisherService')
-
     if session:
         try:
-            session_service = await di_container.get('SessionService')
             # Delete the session from the database
             await session_service.delete_session(session.session_id)
 

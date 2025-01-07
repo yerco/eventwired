@@ -1,13 +1,11 @@
 from src.controllers.websocket_controller import WebSocketController
+from src.core.decorators import inject
 from src.core.event_bus import Event
+from src.services.websocket_service import WebSocketService
 
-from demo_app.di_setup import di_container
 
-
-async def chat_room_controller(event: Event):
-    # Resolve the WebSocketService from the DI container
-    websocket_service = await di_container.get('WebSocketService')
-
+@inject
+async def chat_room_controller(event: Event, websocket_service: WebSocketService):
     # Create the base controller
     controller = WebSocketController(event)
 

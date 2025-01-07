@@ -1,9 +1,10 @@
+from src.core.dicontainer import DIContainer
 from src.core.request import Request
 from src.core.event_bus import Event
+from src.core.decorators import inject
 
-from demo_app.di_setup import di_container
 
-
+@inject
 async def handle_403_event(event: Event):
     request = event.data['request']
     send = event.data['send']
@@ -21,8 +22,9 @@ async def handle_403_event(event: Event):
     event.data['response_already_sent'] = True
 
 
-async def handle_404_event(event: Event):
-    template_service = await di_container.get('TemplateService')
+@inject
+async def handle_404_event(event: Event, container: DIContainer):
+    template_service = await container.get('TemplateService')
     request: Request = event.data['request']
     context = {}
     rendered_content = template_service.render_template('404.html', context)
