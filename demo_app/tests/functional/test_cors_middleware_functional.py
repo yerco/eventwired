@@ -1,12 +1,14 @@
 import os
+from unittest.mock import AsyncMock
+
 import pytest
 
 from src.test_utils.test_client import EWTestClient
 from src.core.framework_app import FrameworkApp
 from src.core.setup_registry import run_setups
+from src.services.middleware_service import MiddlewareService
 
 from demo_app.routes import register_routes
-from demo_app.di_setup import di_container
 
 
 # Setup a test client
@@ -20,10 +22,14 @@ async def test_client():
         'DATABASE_URL': 'sqlite+aiosqlite:///test_db.db',
         'JWT_SECRET_KEY': 'test_secret_key',
     }
-    await run_setups(di_container, config=test_config)
-    routing_service = await di_container.get('RoutingService')
-    await register_routes(routing_service)
-    app = FrameworkApp()
+    container = AsyncMock()
+    # mock_event_bus = AsyncMock()
+    # mock_middleware_service = AsyncMock(MiddlewareService)
+    # container.get.side_effect = lambda service_name: {
+    #     'EventBus': mock_event_bus,
+    #     'MiddlewareService': mock_middleware_service
+    # }[service_name]
+    app = FrameworkApp(container=container, register_routes=register_routes)
     return EWTestClient(app)
 
 

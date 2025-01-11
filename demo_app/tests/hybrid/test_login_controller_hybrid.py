@@ -1,15 +1,19 @@
 import pytest
 from unittest.mock import AsyncMock, Mock, ANY
 
+from src.core.context_manager import set_container
+from src.core.dicontainer import DIContainer
 from src.core.event_bus import Event
+from src.services.orm_service import ORMService
 
 from demo_app.controllers.login_controller import login_controller
-from demo_app.di_setup import di_container
-from src.services.orm_service import ORMService
 
 
 @pytest.mark.asyncio
 async def test_login_controller_post_success_hybrid_using_real_orm(monkeypatch):
+    container = DIContainer()
+    set_container(container)
+
     # Mock the form service
     mock_form_service = AsyncMock()
 
@@ -52,7 +56,7 @@ async def test_login_controller_post_success_hybrid_using_real_orm(monkeypatch):
         }
         return services.get(service_name)
 
-    monkeypatch.setattr(di_container, 'get', mock_get)
+    monkeypatch.setattr(container, 'get', mock_get)
 
     # Simulate an event with a mock request and no session initially
     mock_request = Mock(method="POST")

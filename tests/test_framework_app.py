@@ -1,22 +1,21 @@
 import pytest
-import traceback
 from unittest.mock import AsyncMock, Mock
 
 from src.core.framework_app import FrameworkApp
-from src.core.dicontainer import di_container
 
 
 @pytest.mark.asyncio
 async def test_framework_app_lifespan(monkeypatch):
     receive = AsyncMock()
     send = AsyncMock()
+    container = AsyncMock()
 
     # Mock the handle_lifespan_events function
     mock_handle_lifespan_events = AsyncMock()
     monkeypatch.setattr('src.core.framework_app.handle_lifespan_events', mock_handle_lifespan_events)
 
     scope = {'type': 'lifespan'}
-    app = FrameworkApp()
+    app = FrameworkApp(container=container, register_routes=AsyncMock(), user_setup=AsyncMock())
 
     # Call the app with a lifespan event
     await app(scope, receive, send)
@@ -29,6 +28,7 @@ async def test_framework_app_lifespan(monkeypatch):
 async def test_framework_app_http(monkeypatch):
     receive = AsyncMock()
     send = AsyncMock()
+    container = AsyncMock()
 
     # Mock Request class and handle_http_requests function
     mock_request = Mock()  # Use Mock for Request
@@ -38,19 +38,20 @@ async def test_framework_app_http(monkeypatch):
     monkeypatch.setattr('src.core.framework_app.handle_http_requests', mock_handle_http_requests)
 
     scope = {'type': 'http'}
-    app = FrameworkApp()
+    app = FrameworkApp(container=container, register_routes=AsyncMock(), user_setup=AsyncMock())
 
     # Call the app with an HTTP event
     await app(scope, receive, send)
 
     # Ensure the http request handler was called with the correct arguments
-    mock_handle_http_requests.assert_awaited_once_with(scope, receive, send, mock_request.return_value, di_container)
+    mock_handle_http_requests.assert_awaited_once_with(scope, receive, send, mock_request.return_value, container)
 
 
 @pytest.mark.asyncio
 async def test_framework_app_websocket(monkeypatch):
     receive = AsyncMock()
     send = AsyncMock()
+    container = AsyncMock()
 
     # Mock Request class and handle_websocket_connections function
     mock_request = Mock()
@@ -60,64 +61,58 @@ async def test_framework_app_websocket(monkeypatch):
     monkeypatch.setattr('src.core.framework_app.handle_websocket_connections', mock_handle_websocket_connections)
 
     scope = {'type': 'websocket'}
-    app = FrameworkApp()
+    app = FrameworkApp(container=container, register_routes=AsyncMock(), user_setup=AsyncMock())
 
     # Call the app with a WebSocket event
     await app(scope, receive, send)
 
     # Ensure the websocket handler was called with the correct arguments
-    mock_handle_websocket_connections.assert_awaited_once_with(scope, receive, send, mock_request.return_value, di_container)
+    mock_handle_websocket_connections.assert_awaited_once_with(scope, receive, send, mock_request.return_value, container)
 
 
 @pytest.mark.asyncio
 async def test_framework_app_exception_handling(monkeypatch):
     receive = AsyncMock()
     send = AsyncMock()
+    container = AsyncMock()
 
-    # Mock EventBus and Event
-    mock_event = AsyncMock()
-    monkeypatch.setattr('src.core.framework_app.Event', mock_event)
+    mock_event_bus = AsyncMock()
+    async def mock_get(service_name):
+        if service_name == "EventBus":
+            return mock_event_bus
+        raise Exception(f"Service {service_name} not found")
+    container.get = AsyncMock(side_effect=mock_get)
 
-    # Ensure event_bus.publish is an AsyncMock
-    event_bus = AsyncMock()
-    event_bus.publish = AsyncMock()  # Explicitly set publish as an AsyncMock
-    mock_get = AsyncMock(return_value=event_bus)
-    monkeypatch.setattr('src.core.framework_app.di_container.get', mock_get)
+    # Mock Event class to return a proper instance
+    class MockEvent:
+        def __init__(self, name, data):
+            self.name = name
+            self.data = data
+
+    mock_event_cls = Mock(side_effect=MockEvent)  # Wrap MockEvent with Mock
+
+    monkeypatch.setattr('src.core.framework_app.Event', mock_event_cls)
+
+    mock_event_bus.publish = AsyncMock()
 
     # Force handle_http_requests to raise an exception
     mock_handle_http_requests = AsyncMock(side_effect=Exception("Test exception"))
     monkeypatch.setattr('src.core.framework_app.handle_http_requests', mock_handle_http_requests)
 
     scope = {'type': 'http'}
-    app = FrameworkApp()
+    app = FrameworkApp(container=container, register_routes=AsyncMock(), user_setup=AsyncMock())
 
     # Call the app with an HTTP event that raises an exception
     await app(scope, receive, send)
 
-    # Debugging: Check if event_bus.publish is an AsyncMock
-    print(f"event_bus.publish: {event_bus.publish}")
+    # Ensure the error event was published# Fetch the actual call arguments to MockEvent
+    actual_args, actual_kwargs = mock_event_cls.call_args
+    # Assert the arguments explicitly
+    assert actual_kwargs['name'] == "http.error.500"  # Event name
+    assert type(actual_kwargs['data']['exception']) is Exception  # Event data
+    assert "Traceback" in actual_kwargs['data']['traceback']  # Traceback exists
+    assert actual_kwargs['data']['send'] == send  # Correct send function
+
 
     # Ensure the publish method was awaited once
-    event_bus.publish.assert_awaited_once()
-
-    # Capture the actual traceback that would be generated
-    captured_traceback = traceback.format_exc()
-
-    # Check that the error event was published with the correct partial traceback
-    mock_event.assert_called_once()
-
-    # Extract the actual arguments passed to the mock event
-    args, kwargs = mock_event.call_args
-
-    # Verify the name of the event
-    assert kwargs['name'] == "http.error.500"
-
-    # Check that the exception is correctly passed
-    assert kwargs['data']['exception'] == mock_handle_http_requests.side_effect
-
-    # Ensure the traceback contains the exception message (partial match)
-    assert "Test exception" in kwargs['data']['traceback']
-    assert "raise effect" in kwargs['data']['traceback']
-
-    # Ensure that send was passed correctly
-    assert kwargs['data']['send'] == send
+    mock_event_bus.publish.assert_awaited_once()

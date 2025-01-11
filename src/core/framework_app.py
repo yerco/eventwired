@@ -11,10 +11,9 @@ from src.core.event_bus import Event
 
 
 class FrameworkApp:
-    def __init__(self, container: DIContainer, register_routes: Callable, user_setup: Callable):
+    def __init__(self, container: DIContainer, register_routes: Callable):
         self.container = container
         self.register_routes = register_routes
-        self.user_setup = user_setup
 
     async def __call__(self, scope: dict, receive: Callable, send: Callable) -> None:
         try:
@@ -26,6 +25,7 @@ class FrameworkApp:
             elif scope['type'] == 'websocket':
                 await handle_websocket_connections(scope, receive, send, request, self.container)
         except Exception as e:
+            traceback.print_exc()  # Print traceback for debugging
             print(f"Error in ASGI application: {e}")
 
             # Publish the error event without sending the response directly
@@ -34,7 +34,6 @@ class FrameworkApp:
             await event_bus.publish(event)
 
     async def setup(self):
-        await self.user_setup(self.container)
         await run_setups(self.container)
         routing_service = await self.container.get('RoutingService')
         # Custom route registration logic for the user app

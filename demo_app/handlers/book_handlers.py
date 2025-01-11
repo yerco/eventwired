@@ -4,7 +4,6 @@ from typing import Optional
 from src.services.orm_service import ORMService
 
 from demo_app.models.book import Book
-from demo_app.di_setup import di_container
 from demo_app.models.book_read_model import BookReadModel
 
 from src.services.redis_service import RedisService
@@ -12,8 +11,7 @@ from src.services.redis_service import RedisService
 
 class BookCommandHandler:
     def __init__(self, orm_service: ORMService = None, redis_service: Optional[RedisService] = None):
-        self.orm_service = orm_service or di_container.get('ORMService')
-
+        self.orm_service = orm_service
         # Instantiate the read model if RedisService is available
         if redis_service:
             self.book_read_model = BookReadModel(redis_service)

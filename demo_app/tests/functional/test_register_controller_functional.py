@@ -2,16 +2,19 @@ import os
 import pytest
 import re
 
-from src.core.setup_registry import run_setups
+from src.core.context_manager import set_container
+from src.core.dicontainer import DIContainer
 from src.test_utils.test_client import EWTestClient
 from src.core.framework_app import FrameworkApp
 
 from demo_app.routes import register_routes
-from demo_app.di_setup import di_container
 
 
 @pytest.fixture
 async def test_client():
+    container = DIContainer()
+    set_container(container)
+
     # Get three levels up from the current file’s directory
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     test_config = {
@@ -29,11 +32,9 @@ async def test_client():
         'JWT_EXPIRATION_SECONDS': 7200,  # 2 hours expiration time
         'ENABLE_CSRF': True,
     }
-    await run_setups(di_container, config=test_config)
-    routing_service = await di_container.get('RoutingService')
-    # Custom route registration logic for the user app
-    await register_routes(routing_service)
-    app = FrameworkApp()
+    app = FrameworkApp(container, register_routes)
+    await app.setup()
+
     return EWTestClient(app)
 
 
@@ -220,6 +221,7 @@ async def test_invalid_username_format(test_client):
     assert "Username cannot contain whitespace" in response.body, "Error message should indicate username format issue."
     if os.path.exists('test_db.db'):
         os.remove('test_db.db')
+
 
 @pytest.mark.asyncio
 async def test_missing_csrf_token(test_client):

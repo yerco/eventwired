@@ -1,17 +1,21 @@
 import pytest
 from unittest.mock import AsyncMock, Mock, ANY
 
+from src.core.context_manager import set_container
+from src.core.dicontainer import DIContainer
 from src.core.response import Response
 from src.core.event_bus import Event
 from src.controllers.http_controller import HTTPController
 
 from demo_app.controllers.login_controller import login_controller
-from demo_app.di_setup import di_container
 from demo_app.models.user import User
 
 
 @pytest.mark.asyncio
 async def test_login_controller_get_one(monkeypatch):
+    container = DIContainer()
+    set_container(container)
+
     # Create mock services
     mock_template_service = Mock()  # Use Mock instead of AsyncMock
     mock_send_response = AsyncMock()
@@ -34,7 +38,7 @@ async def test_login_controller_get_one(monkeypatch):
         }
         return services[service_name]
 
-    monkeypatch.setattr(di_container, 'get', mock_get)
+    monkeypatch.setattr(container, 'get', mock_get)
 
     # Monkeypatch HTTPController's send_response to track the response flow
     monkeypatch.setattr(HTTPController, 'send_response', mock_send_response)
@@ -51,7 +55,9 @@ async def test_login_controller_get_one(monkeypatch):
     })
 
     # Call the login_controller
-    await login_controller(event)
+    await login_controller(event, form_service=mock_form_service, template_service=mock_template_service,
+                           auth_service=mock_authentication_service, session_service=mock_session_service,
+                           event_bus=mock_event_bus)
 
     # Check that the template service was used to render the login form
     mock_template_service.render_template.assert_called_once_with('login.html', {
@@ -74,6 +80,9 @@ async def test_login_controller_get_one(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_login_controller_get_two(monkeypatch):
+    container = DIContainer()
+    set_container(container)
+
     # Create mock services
     mock_template_service = AsyncMock()
     mock_send_response = AsyncMock()
@@ -96,7 +105,7 @@ async def test_login_controller_get_two(monkeypatch):
         }
         return services[service_name]
 
-    monkeypatch.setattr(di_container, 'get', mock_get)
+    monkeypatch.setattr(container, 'get', mock_get)
 
     # Monkeypatch HTTPController's send_response to track the response flow
     monkeypatch.setattr(HTTPController, 'send_response', mock_send_response)
@@ -114,7 +123,9 @@ async def test_login_controller_get_two(monkeypatch):
     })
 
     # Call the login_controller
-    await login_controller(event)
+    await login_controller(event, form_service=mock_form_service, template_service=mock_template_service,
+                           auth_service=mock_authentication_service, session_service=mock_session_service,
+                           event_bus=mock_event_bus)
 
     # Check that the template service was used to render the login form
     mock_template_service.render_template.assert_called_once_with('login.html', {
@@ -138,6 +149,9 @@ async def test_login_controller_get_two(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_login_controller_post_success(monkeypatch):
+    container = DIContainer()
+    set_container(container)
+
     # Create mock services
     mock_template_service = AsyncMock()
     mock_send_response = AsyncMock()
@@ -173,7 +187,7 @@ async def test_login_controller_post_success(monkeypatch):
         }
         return services[service_name]
 
-    monkeypatch.setattr(di_container, 'get', mock_get)
+    monkeypatch.setattr(container, 'get', mock_get)
 
     # Monkeypatch HTTPController's send_response to track the response flow
     monkeypatch.setattr(HTTPController, 'send_response', mock_send_response)
@@ -194,7 +208,9 @@ async def test_login_controller_post_success(monkeypatch):
     })
 
     # Call the login_controller
-    await login_controller(event)
+    await login_controller(event, form_service=mock_form_service, template_service=mock_template_service,
+                           auth_service=mock_authentication_service, session_service=mock_session_service,
+                           event_bus=mock_event_bus)
 
     # Check that the form service was used to create and validate the form
     mock_form_service.create_form.assert_called_once_with(ANY, data={'username': 'validuser', 'password': 'validpassword'})
@@ -225,6 +241,9 @@ async def test_login_controller_post_success(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_login_controller_post_invalid_credentials(monkeypatch):
+    container = DIContainer()
+    set_container(container)
+
     # Create mock services
     mock_template_service = Mock()  # Use Mock instead of AsyncMock
     mock_send_response = AsyncMock()
@@ -263,7 +282,7 @@ async def test_login_controller_post_invalid_credentials(monkeypatch):
         }
         return services[service_name]
 
-    monkeypatch.setattr(di_container, 'get', mock_get)
+    monkeypatch.setattr(container, 'get', mock_get)
 
     # Monkeypatch HTTPController's send_response to track the response flow
     monkeypatch.setattr(HTTPController, 'send_response', mock_send_response)
@@ -284,7 +303,9 @@ async def test_login_controller_post_invalid_credentials(monkeypatch):
     })
 
     # Call the login_controller
-    await login_controller(event)
+    await login_controller(event, form_service=mock_form_service, template_service=mock_template_service,
+                           auth_service=mock_authentication_service, session_service=mock_session_service,
+                           event_bus=mock_event_bus)
 
     # Check that the form service was used to create and validate the form
     mock_form_service.create_form.assert_called_once_with(ANY, data={'username': 'invaliduser', 'password': 'invalidpassword'})
@@ -316,6 +337,9 @@ async def test_login_controller_post_invalid_credentials(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_login_controller_post_invalid_form(monkeypatch):
+    container = DIContainer()
+    set_container(container)
+
     # Create mock services
     mock_template_service = Mock()  # Use Mock instead of AsyncMock
     mock_send_response = AsyncMock()
@@ -351,7 +375,7 @@ async def test_login_controller_post_invalid_form(monkeypatch):
         }
         return services[service_name]
 
-    monkeypatch.setattr(di_container, 'get', mock_get)
+    monkeypatch.setattr(container, 'get', mock_get)
 
     # Monkeypatch HTTPController's send_response to track the response flow
     monkeypatch.setattr(HTTPController, 'send_response', mock_send_response)
@@ -372,7 +396,9 @@ async def test_login_controller_post_invalid_form(monkeypatch):
     })
 
     # Call the login_controller
-    await login_controller(event)
+    await login_controller(event, form_service=mock_form_service, template_service=mock_template_service,
+                           auth_service=mock_authentication_service, session_service=mock_session_service,
+                           event_bus=mock_event_bus)
 
     # Check that the form service was used to create and validate the form
     mock_form_service.create_form.assert_called_once_with(ANY, data={'username': 'invaliduser', 'password': 'short'})

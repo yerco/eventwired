@@ -22,3 +22,8 @@ def get_container():
         raise RuntimeError("No DI container is set in the current context.")
     print(f"DI container retrieved: {container}")
     return container
+
+
+def reset_container():
+    _current_container.set(None)
+    print("DI container reset in context.")

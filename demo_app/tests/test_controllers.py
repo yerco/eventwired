@@ -1,14 +1,18 @@
 import pytest
 from unittest.mock import AsyncMock, Mock
 
+from src.core.context_manager import set_container
+from src.core.dicontainer import DIContainer
 from src.core.event_bus import Event
 
 from demo_app.controllers.hello_controller import hello_controller
-from demo_app.di_setup import di_container
 
 
 @pytest.mark.asyncio
 async def test_hello_controller(monkeypatch):
+    container = DIContainer()
+    set_container(container)
+
     # Mock dependencies
     mock_orm_service = AsyncMock()
     mock_template_service = Mock()
@@ -24,7 +28,7 @@ async def test_hello_controller(monkeypatch):
         }
         return services[service_name]
 
-    monkeypatch.setattr(di_container, 'get', mock_get)
+    monkeypatch.setattr(container, 'get', mock_get)
 
     # Mock ORMService to return a list of users
     mock_orm_service.all.return_value = [mock_user]

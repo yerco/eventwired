@@ -4,22 +4,16 @@ import urllib.parse
 from src.controllers.http_controller import HTTPController
 from src.core.event_bus import Event
 
-from demo_app.di_setup import di_container
 from demo_app.forms.book_form import BookForm
 from demo_app.handlers.book_handlers import BookQueryHandler
+from src.services.form_service import FormService
+from src.services.orm_service import ORMService
+from src.services.redis_service import RedisService
+from src.services.template_service import TemplateService
 
 
-async def queries_books_controller(event: Event):
-    # Retrieve services from the DI container
-    form_service = await di_container.get('FormService')
-    template_service = await di_container.get('TemplateService')
-    orm_service = await di_container.get('ORMService')
-    try:
-        redis_service = await di_container.get('RedisService')
-    except Exception as e:
-        print("Note: you are not using REDIS")
-        redis_service = None
-
+async def queries_books_controller(event: Event, form_service: FormService, template_service: TemplateService,
+                                   orm_service: ORMService, redis_service: RedisService=None):
     # Instantiate Command and Query Handlers
     query_handler = BookQueryHandler(orm_service=orm_service, redis_service=redis_service)
     controller = HTTPController(event, template_service)

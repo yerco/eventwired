@@ -70,14 +70,12 @@ async def test_list_books(event_list_books, monkeypatch):
     query_handler_mock.list_all_books.return_value = orm_service_mock.all.return_value
     redis_service_mock = None
 
-    # Use monkeypatch to replace dependencies in the DI container
-    monkeypatch.setattr('demo_app.di_setup.di_container.get', AsyncMock(side_effect=[form_service_mock, template_service_mock, orm_service_mock, redis_service_mock]))
-
     # Use monkeypatch to replace BookQueryHandler with our mocked query_handler
     monkeypatch.setattr('demo_app.controllers.queries_books_controller.BookQueryHandler', lambda *args, **kwargs: query_handler_mock)
 
     # Act
-    await queries_books_controller(event_list_books)
+    await queries_books_controller(event_list_books, form_service=form_service_mock, template_service=template_service_mock,
+                                   orm_service=orm_service_mock)
 
     # Assert
     query_handler_mock.list_all_books.assert_awaited_once()  # Ensure list_all_books was awaited exactly once
@@ -128,12 +126,6 @@ async def test_list_books_with_redis(event_list_books, monkeypatch):
         async def list_all_books(self):
             return await self.book_read_model.list_all_books()
 
-    # Use monkeypatch to replace dependencies in the DI container
-    monkeypatch.setattr(
-        'demo_app.di_setup.di_container.get',
-        AsyncMock(side_effect=[form_service_mock, template_service_mock, orm_service_mock, redis_service_mock])
-    )
-
     # Use monkeypatch to replace BookQueryHandler with our mocked handler class
     monkeypatch.setattr(
         'demo_app.controllers.queries_books_controller.BookQueryHandler',
@@ -141,7 +133,8 @@ async def test_list_books_with_redis(event_list_books, monkeypatch):
     )
 
     # Act
-    await queries_books_controller(event_list_books)
+    await queries_books_controller(event_list_books, form_service=form_service_mock, template_service=template_service_mock,
+                                   orm_service=orm_service_mock, redis_service=redis_service_mock)
 
     # Assert
     book_read_model_mock.list_all_books.assert_awaited_once()  # Ensure list_all_books was awaited exactly once
@@ -188,14 +181,12 @@ async def test_book_detail(event_book_detail, monkeypatch):
     query_handler_mock = AsyncMock()
     query_handler_mock.get_book_by_title.return_value = orm_service_mock.get.return_value
 
-    # Use monkeypatch to replace dependencies in the DI container
-    monkeypatch.setattr('demo_app.di_setup.di_container.get', AsyncMock(side_effect=[form_service_mock, template_service_mock, orm_service_mock, redis_service_mock]))
-
     # Use monkeypatch to replace BookQueryHandler with our mocked query_handler
     monkeypatch.setattr('demo_app.controllers.queries_books_controller.BookQueryHandler', lambda *args, **kwargs: query_handler_mock)
 
     # Act
-    await queries_books_controller(event_book_detail)
+    await queries_books_controller(event_book_detail, form_service=form_service_mock, template_service=template_service_mock,
+                                   orm_service=orm_service_mock)
 
     # Assert
     query_handler_mock.get_book_by_title.assert_awaited_once_with("Test Book")  # Ensure the correct book was queried
@@ -255,12 +246,6 @@ async def test_book_detail_with_redis(event_book_detail, monkeypatch):
         async def get_book_by_title(self, title: str):
             return await self.book_read_model.get_book(title)
 
-    # Use monkeypatch to replace dependencies in the DI container
-    monkeypatch.setattr(
-        'demo_app.di_setup.di_container.get',
-        AsyncMock(side_effect=[form_service_mock, template_service_mock, orm_service_mock, redis_service_mock])
-    )
-
     # Use monkeypatch to replace BookQueryHandler with our mocked handler class
     monkeypatch.setattr(
         'demo_app.controllers.queries_books_controller.BookQueryHandler',
@@ -268,7 +253,8 @@ async def test_book_detail_with_redis(event_book_detail, monkeypatch):
     )
 
     # Act
-    await queries_books_controller(event_book_detail)
+    await queries_books_controller(event_book_detail, form_service=form_service_mock, template_service=template_service_mock,
+                                   orm_service=orm_service_mock, redis_service=redis_service_mock)
 
     # Assert
     book_read_model_mock.get_book.assert_awaited_once_with("Test Book")  # Ensure the correct book was queried
@@ -334,14 +320,12 @@ async def test_edit_book(event_edit_book, monkeypatch):
     query_handler_mock = AsyncMock()
     query_handler_mock.get_book_by_title.return_value = orm_service_mock.get.return_value
 
-    # Use monkeypatch to replace dependencies in the DI container
-    monkeypatch.setattr('demo_app.di_setup.di_container.get', AsyncMock(side_effect=[form_service_mock, template_service_mock, orm_service_mock, redis_service_mock]))
-
     # Use monkeypatch to replace BookQueryHandler with our mocked query_handler
     monkeypatch.setattr('demo_app.controllers.queries_books_controller.BookQueryHandler', lambda *args, **kwargs: query_handler_mock)
 
     # Act
-    await queries_books_controller(event_edit_book)
+    await queries_books_controller(event_edit_book, form_service=form_service_mock, template_service=template_service_mock,
+                                   orm_service=orm_service_mock)
 
     # Assert
     query_handler_mock.get_book_by_title.assert_awaited_once_with("Test Book")  # Ensure the correct book was queried
@@ -399,12 +383,6 @@ async def test_edit_book_with_redis(event_edit_book, monkeypatch):
         async def get_book_by_title(self, title: str):
             return await self.book_read_model.get_book(title)
 
-    # Use monkeypatch to replace dependencies in the DI container
-    monkeypatch.setattr(
-        'demo_app.di_setup.di_container.get',
-        AsyncMock(side_effect=[form_service_mock, template_service_mock, orm_service_mock, redis_service_mock])
-    )
-
     # Use monkeypatch to replace BookQueryHandler with our mocked handler class
     monkeypatch.setattr(
         'demo_app.controllers.queries_books_controller.BookQueryHandler',
@@ -412,7 +390,8 @@ async def test_edit_book_with_redis(event_edit_book, monkeypatch):
     )
 
     # Act
-    await queries_books_controller(event_edit_book)
+    await queries_books_controller(event_edit_book, form_service=form_service_mock, template_service=template_service_mock,
+                                   orm_service=orm_service_mock)
 
     # Assert
     book_read_model_mock.get_book.assert_awaited_once_with("Test Book")  # Ensure the correct book was queried

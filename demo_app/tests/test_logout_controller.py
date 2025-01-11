@@ -1,16 +1,20 @@
 import pytest
 from unittest.mock import AsyncMock
 
+from src.core.context_manager import set_container
+from src.core.dicontainer import DIContainer
 from src.core.session import Session
 from src.core.event_bus import Event
 from src.controllers.http_controller import HTTPController
 
 from demo_app.controllers.logout_controller import logout_controller
-from demo_app.di_setup import di_container
 
 
 @pytest.mark.asyncio
 async def test_logout_controller_success(monkeypatch):
+    container = DIContainer()
+    set_container(container)
+
     # Create mock services
     mock_publisher_service = AsyncMock()
     mock_session_service = AsyncMock()
@@ -26,7 +30,7 @@ async def test_logout_controller_success(monkeypatch):
         }
         return services[service_name]
 
-    monkeypatch.setattr(di_container, 'get', mock_get)
+    monkeypatch.setattr(container, 'get', mock_get)
 
     # Monkeypatch BaseController's send_response to track the response flow
     mock_send_response = AsyncMock()
@@ -40,7 +44,8 @@ async def test_logout_controller_success(monkeypatch):
     event = Event(name='http.request.received', data={'session': session, 'send': mock_send})
 
     # Call the logout_controller
-    await logout_controller(event)
+    await logout_controller(event, template_service=mock_template_service, publisher_service=mock_publisher_service,
+                            session_service=mock_session_service)
 
     # Check that the session service was called to delete the session
     mock_session_service.delete_session.assert_called_once_with('test-session-id')
@@ -61,20 +66,25 @@ async def test_logout_controller_success(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_logout_controller_failure(monkeypatch):
+    container = DIContainer()
+    set_container(container)
+
     # Create mock services
     mock_publisher_service = AsyncMock()
     mock_send = AsyncMock()
     mock_template_service = AsyncMock()
+    mock_session_service = AsyncMock()
 
     # Monkeypatch the DI container to return the mocked services
     async def mock_get(service_name):
         services = {
             'PublisherService': mock_publisher_service,
+            'SessionService': mock_session_service,
             'TemplateService': mock_template_service,
         }
         return services[service_name]
 
-    monkeypatch.setattr(di_container, 'get', mock_get)
+    monkeypatch.setattr(container, 'get', mock_get)
 
     # Monkeypatch HTTPController's send_html to track the response flow
     mock_send_html = AsyncMock()
@@ -84,7 +94,8 @@ async def test_logout_controller_failure(monkeypatch):
     event = Event(name='http.request.received', data={'session': None, 'send': mock_send})
 
     # Call the logout_controller
-    await logout_controller(event)
+    await logout_controller(event, template_service=mock_template_service, publisher_service=mock_publisher_service,
+                            session_service=mock_session_service)
 
     # Check that the publisher service was called for failure
     mock_publisher_service.publish_logout_failure.assert_called_once()
