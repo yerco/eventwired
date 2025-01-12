@@ -2,6 +2,7 @@ import os
 import pytest
 import re
 
+from demo_app.di_setup import setup_container
 from src.core.context_manager import set_container
 from src.core.dicontainer import DIContainer
 from src.test_utils.test_client import EWTestClient
@@ -12,9 +13,6 @@ from demo_app.routes import register_routes
 
 @pytest.fixture
 async def test_client():
-    container = DIContainer()
-    set_container(container)
-
     # Get three levels up from the current file’s directory
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     test_config = {
@@ -32,6 +30,10 @@ async def test_client():
         'JWT_EXPIRATION_SECONDS': 7200,  # 2 hours expiration time
         'ENABLE_CSRF': True,
     }
+    container = DIContainer()
+    await setup_container(container, test_config)
+    set_container(container)
+
     app = FrameworkApp(container, register_routes)
     await app.setup()
 

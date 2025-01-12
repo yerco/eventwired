@@ -15,7 +15,7 @@ async def test_framework_app_lifespan(monkeypatch):
     monkeypatch.setattr('src.core.framework_app.handle_lifespan_events', mock_handle_lifespan_events)
 
     scope = {'type': 'lifespan'}
-    app = FrameworkApp(container=container, register_routes=AsyncMock(), user_setup=AsyncMock())
+    app = FrameworkApp(container=container, register_routes=AsyncMock())
 
     # Call the app with a lifespan event
     await app(scope, receive, send)
@@ -38,7 +38,7 @@ async def test_framework_app_http(monkeypatch):
     monkeypatch.setattr('src.core.framework_app.handle_http_requests', mock_handle_http_requests)
 
     scope = {'type': 'http'}
-    app = FrameworkApp(container=container, register_routes=AsyncMock(), user_setup=AsyncMock())
+    app = FrameworkApp(container=container, register_routes=AsyncMock())
 
     # Call the app with an HTTP event
     await app(scope, receive, send)
@@ -61,7 +61,7 @@ async def test_framework_app_websocket(monkeypatch):
     monkeypatch.setattr('src.core.framework_app.handle_websocket_connections', mock_handle_websocket_connections)
 
     scope = {'type': 'websocket'}
-    app = FrameworkApp(container=container, register_routes=AsyncMock(), user_setup=AsyncMock())
+    app = FrameworkApp(container=container, register_routes=AsyncMock())
 
     # Call the app with a WebSocket event
     await app(scope, receive, send)
@@ -100,7 +100,7 @@ async def test_framework_app_exception_handling(monkeypatch):
     monkeypatch.setattr('src.core.framework_app.handle_http_requests', mock_handle_http_requests)
 
     scope = {'type': 'http'}
-    app = FrameworkApp(container=container, register_routes=AsyncMock(), user_setup=AsyncMock())
+    app = FrameworkApp(container=container, register_routes=AsyncMock())
 
     # Call the app with an HTTP event that raises an exception
     await app(scope, receive, send)

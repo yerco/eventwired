@@ -5,10 +5,11 @@ from demo_app.di_setup import setup_container
 from demo_app.routes import register_routes
 
 
+container = DIContainer()
+
 # Create the app, passing in the startup callback
 async def app(scope, receive, send):
     try:
-        container = DIContainer()
         await setup_container(container)
         # Create the app instance with the user-defined startup callback
         framework_app = FrameworkApp(container, register_routes)

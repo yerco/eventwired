@@ -2,45 +2,21 @@ import pytest
 import os
 from unittest.mock import AsyncMock, Mock
 
-from src.core.dicontainer import di_container, DIContainer
+from demo_app.di_setup import setup_container
+from src.core.context_manager import set_container
+from src.core.dicontainer import DIContainer
 from src.core.request import Request
-from src.core.event_bus import Event, EventBus
-from src.services.form_service import FormService
-from src.services.orm_service import ORMService
-from src.services.security.authentication_service import AuthenticationService
-from src.services.session_service import SessionService
-from src.services.template_service import TemplateService
-from src.services.config_service import ConfigService
+from src.core.event_bus import Event
 
 from demo_app.controllers.login_controller import login_controller
 from demo_app.models.user import User
-from demo_app.config import config
-
-
-# Special container for the test, precaution to not stomp real db
-@pytest.fixture(autouse=True)
-async def container():
-    di_container = DIContainer()
-    # Replacing the database
-    config['DATABASE_URL'] = 'sqlite:///test_db.db'
-    config_service = ConfigService(config)
-    di_container.register_singleton_instance(config_service, 'ConfigService')
-    di_container.register_singleton_class(FormService, 'FormService')
-    di_container.register_singleton_class(TemplateService, 'TemplateService')
-    di_container.register_singleton_class(AuthenticationService, 'AuthenticationService')
-    di_container.register_singleton_class(ORMService, 'ORMService')
-    di_container.register_singleton_class(SessionService, 'SessionService')
-    di_container.register_singleton_class(EventBus, 'EventBus')
-    yield di_container
-    # cleanup
-    if os.path.exists('test_db.db'):
-        os.remove('test_db.db')
 
 
 @pytest.mark.asyncio
-async def test_login_controller_get_integration(monkeypatch, container):
-    monkeypatch.setattr('src.core.framework_app.di_container', container)
-
+async def test_login_controller_get_integration():
+    container = DIContainer()
+    await setup_container(container)
+    set_container(container)
     # Simulate an actual HTTP GET request for the login page
     event = Event(name='http.request.received', data={
         'request': Mock(method="GET"),
@@ -49,7 +25,8 @@ async def test_login_controller_get_integration(monkeypatch, container):
     })
 
     # Call the controller without needing to mock every service
-    await login_controller(event)
+    await login_controller(event, form_service=await container.get('FormService'), template_service=await container.get('TemplateService'),
+                           auth_service=await container.get('AuthenticationService'), session_service=await container.get('SessionService'))
 
     # Assert the response
     response = event.data['response']
@@ -61,12 +38,22 @@ async def test_login_controller_get_integration(monkeypatch, container):
 # Not that 'integration' kind of test
 @pytest.mark.asyncio
 async def test_login_controller_post_success_full(monkeypatch):
-    # Mock the TemplateService to avoid using real templates
-    mock_template_service = AsyncMock()
-    mock_template_service.render_template.return_value = "Login successful"
-
-    # Mock the form service
-    mock_form_service = AsyncMock()
+    base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
+    test_config = {
+        'BASE_DIR': base_dir,
+        'TEMPLATE_DIR': os.path.join(base_dir, 'templates'),
+        'CORS_ALLOWED_ORIGINS': ["http://allowed-origin.com", "http://*.example.com"],
+        'CORS_ALLOWED_METHODS': ["GET", "POST", "OPTIONS"],
+        'CORS_ALLOWED_HEADERS': ["Content-Type", "Authorization"],
+        'CORS_ALLOW_CREDENTIALS': True,
+        'DATABASE_URL': 'sqlite+aiosqlite:///test_db.db',
+        'JWT_SECRET_KEY': 'test_secret_key',
+    }
+    container = DIContainer()
+    await setup_container(container, test_config)
+    set_container(container)
+    template_service = await container.get('TemplateService')
+    monkeypatch.setattr(template_service, 'render_template', AsyncMock(return_value="Login successful"))
 
     # Create a mock form and simulate its behavior
     mock_form = AsyncMock()
@@ -74,44 +61,23 @@ async def test_login_controller_post_success_full(monkeypatch):
         'username': AsyncMock(value='validuser'),
         'password': AsyncMock(value='validpassword')
     }
-    mock_form_service.create_form.return_value = mock_form  # Simulate form creation
-
-    # Mock `validate_form` to return two values: (True, {})
-    mock_form_service.validate_form.return_value = (True, {})  # Simulate successful validation
-
-    # Mock other services
-    mock_session_service = AsyncMock()
-    mock_auth_service = AsyncMock()
-    mock_event_bus = AsyncMock()
-    mock_orm_service = AsyncMock()
+    form_service = await container.get('FormService')
+    monkeypatch.setattr(form_service, 'create_form', AsyncMock(return_value=mock_form))
+    monkeypatch.setattr(form_service, 'validate_form', AsyncMock(return_value=(True, {})))
 
     # Simulate a valid user with an explicit user ID
     mock_user = Mock()
     mock_user.id = 1  # Set the user ID to 1
     mock_user.username = 'validuser'
-    mock_auth_service.authenticate_user.return_value = mock_user  # Return the mock user
+    auth_service = await container.get('AuthenticationService')
+    monkeypatch.setattr(auth_service, 'authenticate_user', AsyncMock(return_value=mock_user))
 
-    mock_password_service = AsyncMock()
+    password_service = await container.get('PasswordService')
+    hashed_password = password_service.hash_password('validpassword')
 
-    # Inject the services through DI container
-    async def mock_get(service_name):
-        services = {
-            'FormService': mock_form_service,
-            'ORMService': mock_orm_service,  # Use the real ORMService
-            'SessionService': mock_session_service,  # Mocked session service
-            'AuthenticationService': mock_auth_service,
-            'EventBus': mock_event_bus,
-            'TemplateService': mock_template_service,
-            'PasswordService': mock_password_service,
-        }
-        return services.get(service_name)
-
-    monkeypatch.setattr(di_container, 'get', mock_get)
-    password_service = await di_container.get('PasswordService')
-    hashed_password = await password_service.hash_password('validpassword')
-
-    # Ensure the user exists in the database with a hashed password
-    await mock_orm_service.create(User, username='validuser', password=hashed_password)
+    orm_service = await container.get('ORMService')
+    monkeypatch.setattr(orm_service, 'create', AsyncMock())
+    orm_service.create.return_value = User(username='validuser', password=hashed_password)
 
     async def mock_receive():
         return {
@@ -130,7 +96,8 @@ async def test_login_controller_post_success_full(monkeypatch):
     })
 
     # Call the login_controller with the real container
-    await login_controller(event)
+    await login_controller(event, form_service=await container.get('FormService'), template_service=await container.get('TemplateService'),
+                           auth_service=await container.get('AuthenticationService'), session_service=await container.get('SessionService'))
 
     # Extract and assert the response from the event
     response = event.data.get('response')
@@ -138,12 +105,18 @@ async def test_login_controller_post_success_full(monkeypatch):
     # Ensure the response is successful
     assert response is not None
     assert response.status_code == 200
-    assert "Login successful" in await response.content
+    assert "Welcome, validuser!" in response.content
     assert response.content_type == 'text/html'
+
+    if os.path.exists('test_db.db'):
+        os.remove('test_db.db')
 
 
 @pytest.mark.asyncio
 async def test_login_controller_invalid_method_integration():
+    container = DIContainer()
+    await setup_container(container)
+    set_container(container)
     # Simulate a request with an unsupported method (e.g., PUT)
     mock_request = Mock(method="PUT")
 
@@ -155,7 +128,8 @@ async def test_login_controller_invalid_method_integration():
     })
 
     # Call the controller with the invalid method
-    await login_controller(event)
+    await login_controller(event, form_service=await container.get('FormService'), template_service=await container.get('TemplateService'),
+                           auth_service=await container.get('AuthenticationService'), session_service=await container.get('SessionService'))
 
     # Assert the response
     response = event.data['response']

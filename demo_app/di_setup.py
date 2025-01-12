@@ -27,6 +27,7 @@ from demo_app.subscriber_setup import register_subscribers
 # from demo_app.middleware.ip_geolocation_middleware import IpGeolocationMiddleware
 
 async def setup_container(container, config=None):
+    #container.register_singleton_instance(container, 'DIContainer')
     config_service = ConfigService(config or default_config)
     container.register_singleton_instance(config_service, 'ConfigService')
 
@@ -61,8 +62,8 @@ async def setup_services(container, config_service, event_bus):
     container.register_transient_instance(session_service, 'SessionService')
     publisher_service = PublisherService(event_bus=event_bus)
     container.register_transient_instance(publisher_service, 'PublisherService')
-    # websocket_service = WebSocketService()  # (event_bus=event_bus)
-    # di_container.register_singleton(websocket_service, 'WebSocketService')
+    #websocket_service = WebSocketService()  # (event_bus=event_bus)
+    #container.register_singleton_instance(websocket_service, 'WebSocketService')
     container.register_singleton_class(WebSocketService, 'WebSocketService')
 
     routing_service = RoutingService(event_bus=event_bus, auth_service=auth_service, jwt_service=jwt_service, config_service=config_service)

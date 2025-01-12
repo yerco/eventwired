@@ -1,66 +1,63 @@
 import pytest
 from unittest.mock import AsyncMock, Mock
-from demo_app.controllers.chat_room_controller import chat_room_controller
+
+from src.core.context_manager import set_container
+from src.core.dicontainer import DIContainer
 from src.core.event_bus import Event
-from src.services.websocket_service import WebSocketService
+
+from demo_app.controllers.chat_room_controller import chat_room_controller
+from demo_app.di_setup import setup_container
 
 
 @pytest.mark.asyncio
 async def test_chat_room_controller_registration(monkeypatch):
-    # Mock WebSocketService
-    mock_websocket_service = WebSocketService()
-    mock_websocket_service.register_client = Mock()
-    mock_websocket_service.accept_client_connection = AsyncMock()
-
-    # Mock DI container to provide WebSocketService
-    async def mock_get(service_name):
-        if service_name == 'WebSocketService':
-            return mock_websocket_service
-    monkeypatch.setattr('demo_app.di_setup.di_container.get', mock_get)
+    container = DIContainer()
+    await setup_container(container)
+    set_container(container)
 
     # Create a mock event
     mock_event = Event(name="test_event", data={'send': AsyncMock(), 'receive': AsyncMock()})
 
+    websocket_service = await container.get('WebSocketService')
     # Execute the controller
-    await chat_room_controller(mock_event)
+    await chat_room_controller(mock_event, websocket_service=websocket_service)
 
     # Assert that the controller was registered correctly in the WebSocketService
-    assert mock_websocket_service.register_client.called, "Controller was not registered in WebSocketService."
+    assert len(websocket_service.clients) == 1, "Controller was not registered correctly."
 
 
 @pytest.mark.asyncio
 async def test_chat_room_controller_connection(monkeypatch):
-    # Mock WebSocketService
-    mock_websocket_service = WebSocketService()
-    mock_websocket_service.accept_client_connection = AsyncMock()
-
-    # Mock DI container to provide WebSocketService
-    async def mock_get(service_name):
-        if service_name == 'WebSocketService':
-            return mock_websocket_service
-    monkeypatch.setattr('demo_app.di_setup.di_container.get', mock_get)
+    container = DIContainer()
+    await setup_container(container)
+    set_container(container)
 
     # Create a mock event
     mock_event = Event(name="test_event", data={'send': AsyncMock(), 'receive': AsyncMock()})
 
-    # Execute the controller
-    await chat_room_controller(mock_event)
+    websocket_service = await container.get('WebSocketService')
 
-    # Assert that the connection was accepted
-    mock_websocket_service.accept_client_connection.assert_called_once()
+    mock_accept_client_connection = AsyncMock()
+    monkeypatch.setattr(websocket_service, "accept_client_connection", mock_accept_client_connection)
+
+    # Execute the controller
+    await chat_room_controller(mock_event, websocket_service=websocket_service)
+
+    assert len(websocket_service.clients) > 0, "No clients were registered."
+    client = websocket_service.clients[0]
+    mock_accept_client_connection.assert_awaited_once_with(client)
 
 
 @pytest.mark.asyncio
 async def test_chat_room_controller_message_broadcast(monkeypatch):
-    # Mock WebSocketService
-    mock_websocket_service = WebSocketService()
-    mock_websocket_service.broadcast_message = AsyncMock()
+    container = DIContainer()
+    await setup_container(container)
+    set_container(container)
 
-    # Mock DI container to provide WebSocketService
-    async def mock_get(service_name):
-        if service_name == 'WebSocketService':
-            return mock_websocket_service
-    monkeypatch.setattr('demo_app.di_setup.di_container.get', mock_get)
+    websocket_service = await container.get('WebSocketService')
+
+    mock_accept_client_connection = AsyncMock()
+    monkeypatch.setattr(websocket_service, "broadcast_message", mock_accept_client_connection)
 
     # Create a mock event
     mock_event = Event(name="test_event", data={'send': AsyncMock(), 'receive': AsyncMock()})
@@ -72,23 +69,22 @@ async def test_chat_room_controller_message_broadcast(monkeypatch):
     ]
 
     # Execute the controller
-    await chat_room_controller(mock_event)
+    await chat_room_controller(mock_event, websocket_service=websocket_service)
 
     # Assert that broadcast_message was called with the right content
-    mock_websocket_service.broadcast_message.assert_any_call("User: Hello World!")
+    websocket_service.broadcast_message.assert_any_call("User: Hello World!")
 
 
 @pytest.mark.asyncio
 async def test_chat_room_controller_disconnection(monkeypatch):
-    # Mock WebSocketService
-    mock_websocket_service = WebSocketService()
-    mock_websocket_service.broadcast_message = AsyncMock()
+    container = DIContainer()
+    await setup_container(container)
+    set_container(container)
 
-    # Mock DI container to provide WebSocketService
-    async def mock_get(service_name):
-        if service_name == 'WebSocketService':
-            return mock_websocket_service
-    monkeypatch.setattr('demo_app.di_setup.di_container.get', mock_get)
+    websocket_service = await container.get('WebSocketService')
+
+    mock_accept_client_connection = AsyncMock()
+    monkeypatch.setattr(websocket_service, "broadcast_message", mock_accept_client_connection)
 
     # Create a mock event
     mock_event = Event(name="test_event", data={'send': AsyncMock(), 'receive': AsyncMock()})
@@ -100,7 +96,7 @@ async def test_chat_room_controller_disconnection(monkeypatch):
     ]
 
     # Execute the controller
-    await chat_room_controller(mock_event)
+    await chat_room_controller(mock_event, websocket_service=websocket_service)
 
     # Assert that the WebSocketService does not try to broadcast to disconnected clients
-    assert mock_websocket_service.broadcast_message.call_count == 1, "Unexpected broadcasts after disconnect."
+    assert websocket_service.broadcast_message.call_count == 1, "Unexpected broadcasts after disconnect."
