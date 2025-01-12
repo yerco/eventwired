@@ -15,7 +15,7 @@ def resolve(service_name: str):
 def inject(func):
     @wraps(func)
     async def async_wrapper(*args, **kwargs):
-        print(f"Injecting dependencies for {func.__name__}...")
+        #print(f"Injecting dependencies for {func.__name__}...")
         container = get_container()
         sig = inspect.signature(func)
         for name, param in sig.parameters.items():
@@ -23,7 +23,7 @@ def inject(func):
                 continue  # Skip already provided arguments
             if param.annotation != inspect._empty:
                 service_name = param.annotation.__name__
-                print(f"Resolving {service_name} for {func.__name__}")
+                #print(f"Resolving {service_name} for {func.__name__}")
                 dependency = await container.get(service_name)
                 kwargs[name] = dependency
         return await func(*args, **kwargs)
