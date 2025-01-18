@@ -78,10 +78,8 @@ In EVENTWIRED, events are managed using an event-driven approach. You can listen
    ```
 
    ```python
-   # demo_app/subscribers/event_log_subscriber.py
-   async def log_event_to_db(event: Event):
-      orm_service = await di_container.get('ORMService')
-   
+   @inject
+   async def log_event_to_db(event: Event, orm_service: ORMService):
       await orm_service.create(EventLog, event_name=event.name, additional_data=str(event.data))
    ```
 This system enables you to define your app’s responses to events, offering flexibility for error handling, logging, and more.
@@ -111,16 +109,17 @@ Define routes easily with Python:
 Controllers are simple Python functions that handle requests and return responses. They can be as simple or complex as needed. Here’s an example of a controller that renders an HTML template:
 
    ```python
-   from src.controllers.base_controller import BaseController
-from src.core.event_bus import Event
-from demo_app.di_setup import di_container
-
-
-async def welcome_controller(event: Event):
-    controller = BaseController(event)
-    template_service = await di_container.get('TemplateService')
-    rendered_content = template_service.render_template('welcome.html', {})
-    await controller.send_html(rendered_content)
+   from src.controllers.http_controller import HTTPController
+   from src.core.event_bus import Event
+   from src.core.decorators import inject
+   from src.services.template_service import TemplateService
+   
+   
+   @inject
+   async def welcome_controller(event: Event, template_service: TemplateService):
+      http_controller = HTTPController(event)
+      rendered_content = template_service.render_template('welcome.html', {})
+      await http_controller.send_html(rendered_content)
    ```
    
 ## Real-Time Chat Room Example
@@ -128,23 +127,34 @@ async def welcome_controller(event: Event):
 With EVENTWIRED, you can create a real-time chat room with just a few lines of code. The `demo_app` includes a chat room available at `/chat_room`. Below is all you need to write to set up a chat room using WebSockets:
 
    ```python
-   from src.controllers.base_controller import BaseController
+from src.controllers.websocket_controller import WebSocketController
+from src.core.decorators import inject
 from src.core.event_bus import Event
-from demo_app.di_setup import di_container
+from src.services.websocket_service import WebSocketService
 
 
-async def chat_room_controller(event: Event):
-    websocket_service = await di_container.get('WebSocketService')
-    controller = WebSocketController(event)
-    websocket_service.register_client(controller)
+@inject
+async def chat_room_controller(event: Event, websocket_service: WebSocketService):
+   # Create the base controller
+   controller = WebSocketController(event)
 
-    async def on_message(message):
-        if message not in {"websocket.connect", "websocket.disconnect"}:
-            broadcast_message = f"User: {message}"
-            await websocket_service.broadcast_message(broadcast_message)
+   # Set the controller inside the WebSocketService
+   websocket_service.register_client(controller)
 
-    await websocket_service.accept_client_connection(controller)
-    await websocket_service.listen(controller, on_message)
+   # Define the user logic for message processing
+   async def on_message(message):
+      # Filter out WebSocket connect/disconnect events from broadcasting
+      if message not in {"websocket.connect", "websocket.disconnect"}:
+         print(f"Received message: {message}")
+         # Process and respond to the message
+         broadcast_message = f"User: {message}"
+         await websocket_service.broadcast_message(broadcast_message)
+
+   # Start the WebSocket connection
+   await websocket_service.accept_client_connection(controller)
+
+   # Listen for messages and handle them with on_message
+   await websocket_service.listen(controller, on_message)
    ```
 
 This, along with a simple HTML template and route setup, is enough to get your chat room running.

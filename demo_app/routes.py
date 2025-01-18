@@ -15,6 +15,7 @@ from demo_app.controllers.chat_room_controller import chat_room_controller
 
 async def register_routes(routing_service):
     routing_service.add_route('/', 'GET', welcome_controller)
+    routing_service.add_route('/favicon.ico', 'GET', welcome_controller)
     routing_service.add_route('/hello', 'GET', hello_controller, requires_auth=True)
     routing_service.add_route('/home', 'GET', home_controller)
     routing_service.add_route('/page/<int:id>', 'GET', page_detail_controller)

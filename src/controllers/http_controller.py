@@ -1,3 +1,4 @@
+import os
 from typing import Union, Optional, List, Tuple
 
 from src.core.event_bus import Event
@@ -43,6 +44,24 @@ class HTTPController:
         self.event.data['response'] = response
         return response  # Return the response for further middleware processing
 
+    async def send_file(
+            self, file_path: str, content_type: str = 'application/octet-stream',
+            status: int = 200, cookies: Optional[List[Tuple[str, str, dict]]] = None
+    ):
+        if not os.path.exists(file_path):
+            # Handle file not found
+            await self.send_error(404, "File not found")
+            return
+
+        try:
+            with open(file_path, 'rb') as f:
+                content = f.read()
+        except Exception as e:
+            await self.send_error(500, f"Unable to read file: {str(e)}")
+            return
+
+        response = self.create_response(content, status=status, content_type=content_type, cookies=cookies)
+        await self.send_response(response)
     async def send_text(self, text: str, status: int = 200, cookies: Optional[List[Tuple[str, str, dict]]] = None):
         response = self.create_response(text, status, content_type='text/plain', cookies=cookies)
         await self.send_response(response)

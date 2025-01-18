@@ -1,3 +1,5 @@
+import tempfile
+
 import pytest
 from unittest.mock import AsyncMock
 
@@ -155,6 +157,54 @@ async def test_send_error():
     # Ensure response is in event data
     response = event.data['response']
     assert response.content == "Not Found"
+    assert response.status_code == 404
+    assert response.content_type == 'text/plain'
+
+    # Check that the response has been correctly created
+    assert isinstance(response, Response)
+
+
+@pytest.mark.asyncio
+async def test_file_found_send_file():
+    mock_send = AsyncMock()
+    event = Event(name='test_event', data={'send': mock_send})
+    controller = HTTPController(event)
+
+    # Create a temporary file to simulate a valid file
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(b"Test content for file")
+        temp_file_path = temp_file.name
+
+    try:
+        # Send the file using the controller
+        await controller.send_file(temp_file_path, content_type="text/plain")
+
+        # Ensure response is in event data
+        response = event.data['response']
+        assert response.content == b"Test content for file"
+        assert response.status_code == 200
+        assert response.content_type == "text/plain"
+
+        # Check that the response has been correctly created
+        assert isinstance(response, Response)
+    finally:
+        # Clean up the temporary file
+        import os
+        os.remove(temp_file_path)
+
+
+@pytest.mark.asyncio
+async def test_not_file_found_send_file():
+    mock_send = AsyncMock()
+    event = Event(name='test_event', data={'send': mock_send})
+    controller = HTTPController(event)
+
+    # Ensure that the file does not exist
+    await controller.send_file("non_existent_file.txt")
+
+    # Ensure response is in event data
+    response = event.data['response']
+    assert response.content == "File not found"
     assert response.status_code == 404
     assert response.content_type == 'text/plain'
 

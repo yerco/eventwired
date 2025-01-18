@@ -11,7 +11,6 @@ class WebSocketService:
     def __init__(self):
         self.clients: List[WebSocketHandler] = []
         self._lock = asyncio.Lock()
-        print(f"WebSocketService initialized: {hex(id(self))}")
 
     # Registers a new WebSocket client. Internally, creates a WebSocketHandler for managing client communication.
     def register_client(self, client: WebSocketHandler):
