@@ -1,14 +1,40 @@
+from src.core.decorators import inject
 from src.core.event_bus import Event
 from src.controllers.http_controller import HTTPController
+from src.services.jwt_service import JWTService
+from src.services.orm_service import ORMService
+from src.services.password_service import PasswordService
+from src.services.security.authentication_service import AuthenticationService
 
-from demo_app.di_setup import di_container
 from demo_app.models.user import User
 
 
-async def api_login_controller(event: Event):
-    auth_service = await di_container.get('AuthenticationService')
-    jwt_service = await di_container.get('JWTService')
+@inject
+async def api_create_user_controller(event: Event, password_service: PasswordService, orm_service: ORMService):
+    controller = HTTPController(event)
 
+    request = event.data['request']
+    http_method = request.method
+
+    if http_method == "POST":
+        json_data = await request.json()
+        username = json_data.get('username')
+        password = json_data.get('password')
+
+        user_exists = await orm_service.filter(User, lookup_value=username, lookup_column="username")
+        if user_exists:
+            await controller.send_json({"error":"Username already exists."}, status=400)
+        else:
+            try:
+                _password = password_service.hash_password(password)
+                await orm_service.create(User, username=username, password=_password)
+                await controller.send_json({"message": "User created successfully"}, status=201)
+            except Exception as e:
+                await controller.send_json({"error": f"User creation failed: {e}"}, status=400)
+
+
+@inject
+async def api_login_controller(event: Event, auth_service: AuthenticationService, jwt_service: JWTService):
     controller = HTTPController(event)
     request = event.data['request']
 
@@ -32,8 +58,8 @@ async def api_login_controller(event: Event):
             await controller.send_json({"error": "Invalid credentials"}, status=401)
 
 
-async def api_protected_controller(event: Event):
-    jwt_service = await di_container.get('JWTService')
+@inject
+async def api_protected_controller(event: Event, jwt_service: JWTService):
     controller = HTTPController(event)
     request = event.data.get('request')
     auth_header = request.headers.get('authorization')

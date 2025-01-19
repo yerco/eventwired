@@ -7,6 +7,7 @@ htmlcov
 tempo*
 default.db
 demo_app.db
+*.db
 favicon_io*
 .DS_Store
 nginx
