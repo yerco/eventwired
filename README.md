@@ -31,11 +31,17 @@ A lightweight, async-first web framework built with modern web development in mi
    $ pip install -r requirements.txt
    ```
 
-4. Run the server
+4. [OPTIONAL] Creating your own basic website or api
+   ```
+   $ python eventwired_cli.py
+   ```
+   - NOTE: the `demo_app` can be helpful to understand how to structure your own app. But can also be deleted if you want to start from scratch.  
+
+5. Run the server
 
    Currently, the server supports **Uvicorn**.
 
-   You can specify your own application to serve using the `--app` argument. If no application is provided, the default app `demo_app.app:app will be served.
+   You can specify your own application to serve using the `--app` argument. If no application is provided, **the default app `demo_app.app:app will be served**.
 
    **Using Uvicorn:**
    ```bash
