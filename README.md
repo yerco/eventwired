@@ -45,7 +45,7 @@ A lightweight, async-first web framework built with modern web development in mi
 
    **Using Uvicorn:**
    ```bash
-   $ python run_server.py [--app your_app:app] [--reload] [--host 127.0.0.1] [--port 8000]
+   $ python run_server.py [--app your_app.app:app] [--reload] [--host 127.0.0.1] [--port 8000]
    ```
    - `--app`: Optional. The path to your ASGI application (e.g., `your_app:app`). Defaults to `demo_app.app:app`.
    - `--reload`: Optional. Enable auto-reload on code changes.
