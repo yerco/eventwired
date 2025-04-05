@@ -1,6 +1,7 @@
 import tempfile
 
 import pytest
+from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 from src.core.event_bus import Event
@@ -210,3 +211,39 @@ async def test_not_file_found_send_file():
 
     # Check that the response has been correctly created
     assert isinstance(response, Response)
+
+
+def test_get_session_id_returns_cookie_value():
+    cookie_value = "abc123"
+    mock_send = AsyncMock()
+
+    mock_request = SimpleNamespace(headers={
+        "cookie": f"session_id={cookie_value}; other_cookie=456"
+    })
+
+    event = Event(name="test_event", data={
+        "send": mock_send,
+        "request": mock_request
+    })
+
+    controller = HTTPController(event)
+
+    session_id = controller.get_session_id()
+    assert session_id == cookie_value
+
+
+def test_get_session_id_when_cookie_missing():
+    from types import SimpleNamespace
+
+    mock_send = AsyncMock()
+    mock_request = SimpleNamespace(headers={})  # No cookie
+
+    event = Event(name="test_event", data={
+        "send": mock_send,
+        "request": mock_request
+    })
+
+    controller = HTTPController(event)
+    session_id = controller.get_session_id()
+
+    assert session_id is None

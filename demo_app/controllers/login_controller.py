@@ -59,6 +59,7 @@ async def login_controller(event: Event, form_service: FormService, template_ser
                 session = Session(session_id=None)  # Let it generate a new session ID
                 event.data['session'] = session
                 session.set('user_id', user.id)
+                session.set('is_admin', user.is_admin)
 
                 # Save session to the database
                 await session_service.save_session(session.session_id, session.data)

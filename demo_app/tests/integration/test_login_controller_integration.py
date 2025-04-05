@@ -68,6 +68,7 @@ async def test_login_controller_post_success_full(monkeypatch):
     # Simulate a valid user with an explicit user ID
     mock_user = Mock()
     mock_user.id = 1  # Set the user ID to 1
+    mock_user.is_admin = True
     mock_user.username = 'validuser'
     auth_service = await container.get('AuthenticationService')
     monkeypatch.setattr(auth_service, 'authenticate_user', AsyncMock(return_value=mock_user))
