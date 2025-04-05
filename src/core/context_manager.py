@@ -1,5 +1,7 @@
 from contextvars import ContextVar
+from contextlib import asynccontextmanager
 
+from src.core.dicontainer import di_container
 
 # Context variable for the current DI container
 _current_container: ContextVar = ContextVar("current_container", default=None)
@@ -27,3 +29,12 @@ def get_container():
 def reset_container():
     _current_container.set(None)
     print("DI container reset in context.")
+
+
+@asynccontextmanager
+async def container_context():
+    set_container(di_container)
+    try:
+        yield di_container
+    finally:
+        reset_container()

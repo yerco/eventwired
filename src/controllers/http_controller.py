@@ -80,3 +80,14 @@ class HTTPController:
     async def send_error(self, status: int, message: str = "Error", cookies: Optional[List[Tuple[str, str, dict]]] = None):
         response = self.create_response(message, status, content_type='text/plain', cookies=cookies)
         await self.send_response(response)
+
+    def get_session_id(self) -> Optional[str]:
+        request = self.event.data.get("request")
+        if request and "cookie" in request.headers:
+            cookie_header = request.headers["cookie"]
+            cookies = {
+                kv.split("=")[0].strip(): kv.split("=")[1].strip()
+                for kv in cookie_header.split(";") if "=" in kv
+            }
+            return cookies.get("session_id")
+        return None
