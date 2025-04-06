@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Admin - Users</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<h1>Users</h1>
+<div class="navigation-links">
+    <a href="/admin">Back to Admin Panel</a> |
+    <a href="/logout">Logout</a>
+</div>
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Is Admin</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for user in users %}
+    <tr>
+        <td>{{ user.id }}</td>
+        <td>{{ user.username }}</td>
+        <td>{{ 'Yes' if user.is_admin else 'No' }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</body>
+</html>
