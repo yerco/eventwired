@@ -6,43 +6,49 @@
 </head>
 <body>
 <h1>Users</h1>
+
 <div class="navigation-links">
     <a href="/admin">Back to Admin Panel</a> |
     <a href="/logout">Logout</a>
 </div>
-<table>
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>Username</th>
-        <th>Is Admin</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for user in users %}
-    <tr>
-        <td>{{ user.id }}</td>
-        <td>{{ user.username }}</td>
-        <td>{{ 'Yes' if user.is_admin else 'No' }}</td>
-        <td>
-            <a href="/admin/users/{{ user.id }}/edit">Edit</a> |
-            <form action="/admin/users/{{ user.id }}/delete" method="post" style="display:inline;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <button type="submit" onclick="return confirm('Delete user {{ user.username }}?')">Delete</button>
-            </form>
-        </td>
-    </tr>
-    {% endfor %}
-    </tbody>
+
+<div class="main-content">
+    <table class="user-table">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Is Admin</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ 'Yes' if user.is_admin else 'No' }}</td>
+            <td>
+                <a class="btn edit-btn" href="/admin/users/{{ user.id }}/edit">Edit</a>
+                <form class="inline-form" action="/admin/users/{{ user.id }}/delete" method="post" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button class="btn delete-btn" type="submit" onclick="return confirm('Delete user {{ user.username }}?')">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
     <div class="pagination">
         {% if page > 1 %}
-        <a href="?page={{ page - 1 }}">Previous</a>
+        <a href="?page={{ page - 1 }}" class="btn btn-secondary">Previous</a>
         {% endif %}
         <span>Page {{ page }} of {{ total_pages }}</span>
         {% if page < total_pages %}
-        <a href="?page={{ page + 1 }}">Next</a>
+        <a href="?page={{ page + 1 }}" class="btn btn-secondary">Next</a>
         {% endif %}
     </div>
-</table>
+</div>
 </body>
 </html>
