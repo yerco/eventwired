@@ -34,6 +34,15 @@
     </tr>
     {% endfor %}
     </tbody>
+    <div class="pagination">
+        {% if page > 1 %}
+        <a href="?page={{ page - 1 }}">Previous</a>
+        {% endif %}
+        <span>Page {{ page }} of {{ total_pages }}</span>
+        {% if page < total_pages %}
+        <a href="?page={{ page + 1 }}">Next</a>
+        {% endif %}
+    </div>
 </table>
 </body>
 </html>

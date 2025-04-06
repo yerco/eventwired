@@ -1,6 +1,6 @@
 from typing import Any, Type, Optional, List, Dict
 
-from sqlalchemy import inspect
+from sqlalchemy import inspect, func
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -265,3 +265,17 @@ class ORMService:
             except SQLAlchemyError as e:
                 print(f"SQLAlchemyError during 'truncate_table': {e}")
                 raise
+
+    async def count(self, model: Any) -> int:
+        async with self.Session() as session:
+            try:
+                stmt = select(func.count()).select_from(model)
+                result = await session.execute(stmt)
+                return result.scalar_one()
+            except SQLAlchemyError as e:
+                print(f"SQLAlchemyError during 'count': {e}")
+                raise
+
+    async def paginated(self, model: Any, page: int = 1, per_page: int = 10) -> list[Any]:
+        offset = (page - 1) * per_page
+        return await self.filter(model, limit=per_page, offset=offset)

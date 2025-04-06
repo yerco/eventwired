@@ -6,6 +6,7 @@ from src.services.template_service import TemplateService
 
 from demo_app.decorators.requires_admin import requires_admin
 from demo_app.models.user import User
+from src.utils.paginator import Paginator
 
 
 @requires_admin
@@ -13,11 +14,24 @@ from demo_app.models.user import User
 async def admin_users_controller(event: Event, orm_service: ORMService, template_service: TemplateService):
     controller = HTTPController(event)
     request = event.data["request"]
+
     csrf_token = request.csrf_token
-    users = await orm_service.all(User)
+    raw_page = request.query_params.get("page", ["1"])
+    if isinstance(raw_page, list):
+        raw_page = raw_page[0]
+    page = int(raw_page)
+
+    total_users = await orm_service.count(User)
+    paginator = Paginator(total_users, page, per_page=5)
+
+    users = await orm_service.paginated(User, page=page, per_page=paginator.limit())
+
     context = {
         "users": users,
         "csrf_token": csrf_token,
+        "page": paginator.page,
+        "total_pages": paginator.total_pages,
+        "pagination": paginator.to_dict()
     }
     rendered_content = template_service.render_template('admin/admin_users.html', context)
     await controller.send_html(rendered_content)
