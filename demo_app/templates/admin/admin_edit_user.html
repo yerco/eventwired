@@ -1,0 +1,25 @@
+<!-- demo_app/templates/admin/admin_edit_user.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Edit User</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<h1>Edit User</h1>
+
+<form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label>Username:
+        <input type="text" name="username" value="{{ user.username }}">
+    </label><br>
+    <label>
+        <input type="checkbox" name="is_admin" {% if user.is_admin %}checked{% endif %}>
+        Is Admin
+    </label><br>
+    <button type="submit">Save</button>
+</form>
+
+<a href="/admin/users">Back to Users</a>
+</body>
+</html>

@@ -24,6 +24,13 @@
         <td>{{ user.id }}</td>
         <td>{{ user.username }}</td>
         <td>{{ 'Yes' if user.is_admin else 'No' }}</td>
+        <td>
+            <a href="/admin/users/{{ user.id }}/edit">Edit</a> |
+            <form action="/admin/users/{{ user.id }}/delete" method="post" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" onclick="return confirm('Delete user {{ user.username }}?')">Delete</button>
+            </form>
+        </td>
     </tr>
     {% endfor %}
     </tbody>
