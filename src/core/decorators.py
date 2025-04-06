@@ -1,5 +1,6 @@
 import inspect
 from functools import wraps
+import warnings
 
 from src.core.context_manager import get_container
 
@@ -13,6 +14,12 @@ def resolve(service_name: str):
 # Decorator to automatically inject dependencies into a function's parameters.
 # Dependencies are resolved using the DI container.
 def inject(func):
+    if hasattr(func, "__wrapped__"):
+        warnings.warn(
+            f"[inject] Warning: It looks like @inject is used after another decorator on '{func.__name__}'. "
+            f"This may cause dependency injection to fail. Make sure @inject is the inner-most decorator.",
+            stacklevel=2
+        )
     @wraps(func)
     async def async_wrapper(*args, **kwargs):
         #print(f"Injecting dependencies for {func.__name__}...")

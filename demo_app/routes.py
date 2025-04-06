@@ -9,7 +9,11 @@ from demo_app.controllers.welcome_controller import welcome_controller
 from demo_app.controllers.render_chat_room_controller import render_chat_room_controller
 from demo_app.controllers.chat_room_controller import chat_room_controller
 from demo_app.controllers.admin.admin_home_controller import admin_home_controller
-from demo_app.controllers.admin.admin_users_controller import admin_users_controller
+from demo_app.controllers.admin.admin_users_controller import (
+    admin_users_controller,
+    admin_edit_user_controller,
+    admin_delete_user_controller
+)
 # from demo_app.controllers.queries_books_controller import queries_books_controller
 # from demo_app.controllers.commands_books_controller import commands_books_controller
 #from demo_app.controllers.api_controllers import api_create_user_controller, api_login_controller, api_protected_controller
@@ -30,6 +34,8 @@ async def register_routes(routing_service):
     # Admin
     routing_service.add_route('/admin', 'GET', admin_home_controller, requires_auth=True)
     routing_service.add_route('/admin/users', 'GET', admin_users_controller, requires_auth=True)
+    routing_service.add_route('/admin/users/<int:id>/edit', ['GET', 'POST'], admin_edit_user_controller, requires_auth=True)
+    routing_service.add_route('/admin/users/<int:id>/delete', 'POST', admin_delete_user_controller, requires_auth=True)
     # # Command
     # routing_service.add_route('/books/action/add', ['POST'], commands_books_controller)
     # routing_service.add_route('/books/<str:title>/edit', ['POST'], commands_books_controller)

@@ -91,3 +91,15 @@ class HTTPController:
             }
             return cookies.get("session_id")
         return None
+
+    async def send_redirect(self, location: str, status_code: int = 302, cookies: Optional[List[Tuple[str, str, dict]]] = None):
+        response = Response(
+            content="Redirecting...",
+            status_code=status_code,
+            content_type="text/plain"
+        )
+        response.headers.append((b'Location', location.encode()))
+        if cookies:
+            for name, value, options in cookies:
+                response.set_cookie(name, value, **options)
+        await self.send_response(response)
