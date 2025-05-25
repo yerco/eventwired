@@ -8,7 +8,7 @@ from src.core.decorators import inject
 async def handle_403_event(event: Event):
     request = event.data['request']
     send = event.data['send']
-    error_page = f"<html><body><h1>USER SIDE YASGI 403 Forbidden: {request.path}</h1></body></html>"
+    error_page = f"<html><body><h1>USER SIDE Eventwired 403 Forbidden: {request.path} (CSRF?)</h1></body></html>"
     await send({
         'type': 'http.response.start',
         'status': 403,
