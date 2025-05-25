@@ -30,7 +30,7 @@ def inject(func):
                 continue  # Skip already provided arguments
             if param.annotation != inspect._empty:
                 service_name = param.annotation.__name__
-                print(f"Resolving {service_name} for {func.__name__}")
+                # print(f"Resolving {service_name} for {func.__name__}")
                 if service_name == "DIContainer":
                     # If the parameter is of type DIContainer, pass the container itself
                     kwargs[name] = container
