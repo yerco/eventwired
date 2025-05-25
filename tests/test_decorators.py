@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 from src.core.context_manager import set_container
 from src.core.decorators import inject
+from src.core.dicontainer import DIContainer
 
 
 # Mock services for testing
@@ -134,3 +135,16 @@ async def test_inject_partial_arguments(container):
     result = await example_function("Hello")
     assert result == "Hello, Service Executed"
     container.get.assert_called_once_with("MockService")
+
+
+@pytest.mark.asyncio
+async def test_inject_di_container_name_match(container):
+    container.get = AsyncMock()  # Should not be called
+
+    @inject
+    async def example_function(di: DIContainer):  # <-- param.annotation is DIContainer
+        return di
+
+    result = await example_function()
+    assert result is container
+    container.get.assert_not_called()
