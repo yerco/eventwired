@@ -20,7 +20,7 @@ async def hello_controller(event: Event, orm_service: ORMService, template_servi
 
     # Define context to pass to the template
     context = {
-        "title": "Hello from YASGI!",
+        "title": "Hello from Eventwired!",
         "greeting": "Welcome to the Hello Page!",
         "description": "This is a demonstration of our simple ASGI framework, showcasing the hello endpoint.",
         "features": [
